@@ -78,6 +78,7 @@ void WeaponsResource::LoadWeaponSprites( WEAPON *pWeapon )
 		iRes = 640;
 
 	char sz[128];
+	char temp[140];
 
 	if( !pWeapon )
 		return;
@@ -91,7 +92,8 @@ void WeaponsResource::LoadWeaponSprites( WEAPON *pWeapon )
 	pWeapon->hAmmo = 0;
 	pWeapon->hAmmo2 = 0;
 
-	sprintf( sz, "sprites/%s.txt", pWeapon->szName );
+	sprintf( temp, "sprites/%s.txt", pWeapon->szName );
+	strncpy ( sz, temp, 128 );
 	client_sprite_t *pList = SPR_GetList( sz, &i );
 
 	if( !pList )
