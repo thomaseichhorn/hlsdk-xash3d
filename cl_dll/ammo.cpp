@@ -80,8 +80,7 @@ void WeaponsResource::LoadWeaponSprites( WEAPON *pWeapon )
 	else
 		iRes = 640;
 
-	char sz[128];
-	char temp[140];
+	char sz[256];
 
 	if( !pWeapon )
 		return;
@@ -95,8 +94,7 @@ void WeaponsResource::LoadWeaponSprites( WEAPON *pWeapon )
 	pWeapon->hAmmo = 0;
 	pWeapon->hAmmo2 = 0;
 
-	sprintf( temp, "sprites/%s.txt", pWeapon->szName );
-	strncpy ( sz, temp, 128 );
+	sprintf( sz, "sprites/%s.txt", pWeapon->szName );
 	client_sprite_t *pList = SPR_GetList( sz, &i );
 
 	if( !pList )
@@ -837,7 +835,7 @@ int CHudAmmo::Draw( float flTime )
 	a = (int)Q_max( MIN_ALPHA, m_fFade );
 
 	if( m_fFade > 0 )
-		m_fFade -= ( gHUD.m_flTimeDelta * 20 );
+		m_fFade -= ( (float)gHUD.m_flTimeDelta * 20.0f );
 
 	UnpackRGB( r, g, b, RGB_YELLOWISH );
 
