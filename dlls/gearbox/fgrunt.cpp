@@ -163,6 +163,7 @@ public:
 	// Override these to set behavior
 	Schedule_t *GetScheduleOfType ( int Type );
 	Schedule_t *GetSchedule ( void );
+	Schedule_t *PrioritizedSchedule();
 	MONSTERSTATE GetIdealState ( void );
 
 	void AlertSound( void );
@@ -249,6 +250,7 @@ public:
 	void StartTask( Task_t *pTask );
 	Schedule_t *GetSchedule ( void );
 	Schedule_t *GetScheduleOfType(int Type);
+	void OnChangeSchedule( Schedule_t *pNewSchedule );
 	void StopFollowing( BOOL clearSchedule );
 	void SetAnswerQuestion(CTalkMonster *pSpeaker);
 
@@ -2283,16 +2285,13 @@ int CHFGrunt :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, flo
 		if( m_hEnemy == 0 )
 		{
 			// If the player was facing directly at me, or I'm already suspicious, get mad
-			if( ( m_afMemory & bits_MEMORY_SUSPICIOUS ) || IsFacing( pevAttacker, pev->origin ) )
+			if( (( m_afMemory & bits_MEMORY_SUSPICIOUS ) || IsFacing( pevAttacker, pev->origin )) && gpGlobals->time - m_flLastHitByPlayer < 4.0 && m_iPlayerHits >= 3 )
 			{
-				if (gpGlobals->time - m_flLastHitByPlayer < 4.0 && m_iPlayerHits >= 3)
-				{
-					// Alright, now I'm pissed!
-					PlaySentence( "FG_MAD", 4, VOL_NORM, ATTN_NORM );
+				// Alright, now I'm pissed!
+				PlaySentence( "FG_MAD", 4, VOL_NORM, ATTN_NORM );
 
-					Remember( bits_MEMORY_PROVOKED );
-					StopFollowing( TRUE );
-				}
+				Remember( bits_MEMORY_PROVOKED );
+				StopFollowing( TRUE );
 			}
 			else
 			{
@@ -2311,6 +2310,7 @@ int CHFGrunt :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, flo
 			PlaySentence( "FG_SHOT", 4, VOL_NORM, ATTN_NORM );
 		}
 	}
+	return ret;
 }
 
 //=========================================================
@@ -2618,8 +2618,27 @@ void CHFGrunt :: SetActivity ( Activity NewActivity )
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CHFGrunt :: GetSchedule ( void )
+Schedule_t* CHFGrunt::PrioritizedSchedule()
 {
+	// flying? If PRONE, barnacle has me. IF not, it's assumed I am rapelling.
+	if ( pev->movetype == MOVETYPE_FLY && m_MonsterState != MONSTERSTATE_PRONE )
+	{
+		if (pev->flags & FL_ONGROUND)
+		{
+			// just landed
+			pev->movetype = MOVETYPE_STEP;
+			return GetScheduleOfType ( SCHED_HGRUNT_ALLY_REPEL_LAND );
+		}
+		else
+		{
+			// repel down a rope,
+			if ( m_MonsterState == MONSTERSTATE_COMBAT )
+				return GetScheduleOfType ( SCHED_HGRUNT_ALLY_REPEL_ATTACK );
+			else
+				return GetScheduleOfType ( SCHED_HGRUNT_ALLY_REPEL );
+		}
+	}
+
 	// grunts place HIGH priority on running away from danger sounds.
 	if ( HasConditions(bits_COND_HEAR_SOUND) )
 	{
@@ -2648,24 +2667,15 @@ Schedule_t *CHFGrunt :: GetSchedule ( void )
 			}
 		}
 	}
-	// flying? If PRONE, barnacle has me. IF not, it's assumed I am rapelling.
-	if ( pev->movetype == MOVETYPE_FLY && m_MonsterState != MONSTERSTATE_PRONE )
-	{
-		if (pev->flags & FL_ONGROUND)
-		{
-			// just landed
-			pev->movetype = MOVETYPE_STEP;
-			return GetScheduleOfType ( SCHED_HGRUNT_ALLY_REPEL_LAND );
-		}
-		else
-		{
-			// repel down a rope,
-			if ( m_MonsterState == MONSTERSTATE_COMBAT )
-				return GetScheduleOfType ( SCHED_HGRUNT_ALLY_REPEL_ATTACK );
-			else
-				return GetScheduleOfType ( SCHED_HGRUNT_ALLY_REPEL );
-		}
-	}
+	return NULL;
+}
+
+Schedule_t *CHFGrunt :: GetSchedule ( void )
+{
+	Schedule_t* prioritizedSchedule = PrioritizedSchedule();
+	if (prioritizedSchedule)
+		return prioritizedSchedule;
+
 	if ( HasConditions( bits_COND_ENEMY_DEAD ) && FOkToSpeak() )
 	{
 		PlaySentence( "FG_KILL", 4, VOL_NORM, ATTN_NORM );
@@ -3611,11 +3621,19 @@ void CMedic::RunTask(Task_t *pTask)
 	}
 }
 
-Schedule_t *CMedic::GetSchedule()
+void CMedic::OnChangeSchedule( Schedule_t *pNewSchedule )
 {
 	if (m_fHealing) {
 		StopHealing();
 	}
+	CHFGrunt::OnChangeSchedule( pNewSchedule );
+}
+
+Schedule_t *CMedic::GetSchedule()
+{
+	Schedule_t* prioritizedSchedule = PrioritizedSchedule();
+	if (prioritizedSchedule)
+		return prioritizedSchedule;
 	if ( FBitSet( pev->weapons, MEDIC_EAGLE|MEDIC_HANDGUN ) &&
 		 (GetBodygroup(MEDIC_GUN_GROUP) == MEDIC_GUN_NEEDLE || GetBodygroup(MEDIC_GUN_GROUP) == MEDIC_GUN_NONE)) {
 		return slMedicDrawGun;
@@ -3850,7 +3868,6 @@ void CMedic::StartFollowingHealTarget(CBaseEntity *pTarget)
 	m_hTargetEnt = pTarget;
 	ClearConditions( bits_COND_CLIENT_PUSH );
 	ClearSchedule();
-	ChangeSchedule(GetScheduleOfType(SCHED_MEDIC_HEAL));
 	ALERT(at_aiconsole, "Medic started to follow injured %s\n", STRING(pTarget->pev->classname));
 }
 
