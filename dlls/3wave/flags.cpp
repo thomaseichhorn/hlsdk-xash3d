@@ -52,7 +52,7 @@ void CItemFlag::Spawn()
 	SetThink( &CItemFlag::FlagThink );
 	SetTouch( &CItemFlag::FlagTouch ); 
 
-	pev->nextthink = gpGlobals->time + 0.3; 
+	pev->nextthink = gpGlobals->time + 0.3f;
 
 	//Set the Skin based on the team.
 	pev->skin = pev->team;
@@ -176,7 +176,7 @@ void CItemFlag::FlagTouch( CBaseEntity *pToucher )
 					Capture( pPlayer, RED );
 
 				PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-				pPlayer->edict(), g_usCarried, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+				pPlayer->edict(), g_usCarried, 0, g_vecZero, g_vecZero, 
 				0.0, 0.0, pPlayer->entindex(), pPlayer->pev->team, 1, 0 );
 				return;
 			}
@@ -223,7 +223,7 @@ void CItemFlag::FlagTouch( CBaseEntity *pToucher )
 			pCarriedFlag->Owner = pPlayer;
 
 			PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-			pPlayer->edict(), g_usCarried, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+			pPlayer->edict(), g_usCarried, 0, g_vecZero, g_vecZero, 
 			0.0, 0.0, pPlayer->entindex(), pPlayer->pev->team, 0, 0 );
 
 			UTIL_Remove( this );
@@ -269,11 +269,11 @@ void CItemFlag::FlagTouch( CBaseEntity *pToucher )
 			pCarriedFlag->Owner = pPlayer;
 
 			PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-			pPlayer->edict(), g_usCarried, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+			pPlayer->edict(), g_usCarried, 0, g_vecZero, g_vecZero, 
 			0.0, 0.0, pPlayer->entindex(), pPlayer->pev->team, 0, 0 );
 		}
 		
-		( (CThreeWave*)g_pGameRules )->m_flFlagStatusTime = gpGlobals->time + 0.1;
+		( (CThreeWave*)g_pGameRules )->m_flFlagStatusTime = gpGlobals->time + 0.1f;
 	}
 }
 
@@ -382,7 +382,7 @@ void CItemFlag::Materialize()
 	}
 
 	PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-	edict(), g_usFlagSpawn, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+	edict(), g_usFlagSpawn, 0, g_vecZero, g_vecZero, 
 	0.0, 0.0, pev->team, 0, 0, 0 );
 
 	Dropped = FALSE;
@@ -422,7 +422,7 @@ void CItemFlag::ResetFlag( int iTeam )
 		}
 	}
 
-	( (CThreeWave*)g_pGameRules )->m_flFlagStatusTime = gpGlobals->time + 0.1;
+	( (CThreeWave*)g_pGameRules )->m_flFlagStatusTime = gpGlobals->time + 0.1f;
 }
 
 void CItemFlag::FlagThink()
@@ -446,7 +446,7 @@ void CItemFlag::FlagThink()
 	}
 
 	//Using 0.2 just in case we might lag the server.
-	pev->nextthink = gpGlobals->time + 0.2;
+	pev->nextthink = gpGlobals->time + 0.2f;
 } 
 
 void CItemFlag::Precache()
@@ -505,7 +505,7 @@ void CCarriedFlag::Spawn()
 	m_iOwnerOldVel = 0;
 
 	SetThink( &CCarriedFlag::FlagThink );
-	pev->nextthink = gpGlobals->time + 0.1;
+	pev->nextthink = gpGlobals->time + 0.1f;
 } 
 
 void CCarriedFlag::Precache()
@@ -540,11 +540,11 @@ void CCarriedFlag::FlagThink()
 
 		pev->frame += pev->framerate;
 
-		if( pev->frame < 0.0 || pev->frame >= 256.0 )
+		if( pev->frame < 0.0f || pev->frame >= 256.0f )
 		{
-			pev->frame -= (int)( pev->frame / 256.0 ) * 256.0;
+			pev->frame -= (int)( pev->frame / 256.0f ) * 256.0f;
 		}
-		pev->nextthink = gpGlobals->time + 0.1;
+		pev->nextthink = gpGlobals->time + 0.1f;
 	}
 }
 

@@ -319,7 +319,7 @@ BOOL CBasePlayer::W_CheckNoAmmo()
 
 	if ( m_iQuakeWeapon == IT_LIGHTNING )
 	{
-		 PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, (float *)&pev->origin, (float *)&pev->angles, 0.0, 0.0, 0, 1, 0, 0 );
+		 PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, pev->origin, pev->angles, 0.0, 0.0, 0, 1, 0, 0 );
 
 		 if ( m_pActiveItem )
 			  ((CQuakeGun*)m_pActiveItem)->DestroyEffect();
@@ -335,7 +335,7 @@ void CBasePlayer::W_ChangeWeapon( int iWeaponNumber )
 {
 	if ( m_iQuakeWeapon == IT_LIGHTNING )
 	{
-		 PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, (float *)&pev->origin, (float *)&pev->angles, 0.0, 0.0, 0, 1, 0, 0 );
+		 PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, pev->origin, pev->angles, 0.0, 0.0, 0, 1, 0, 0 );
 
 		 if ( m_pActiveItem )
 			  ((CQuakeGun*)m_pActiveItem)->DestroyEffect();
@@ -604,7 +604,7 @@ void CBasePlayer::Q_FireBullets(int iShots, Vector vecDir, Vector vecSpread)
 	UTIL_MakeVectors(pev->v_angle);
 
 	Vector vecSrc = pev->origin + (gpGlobals->v_forward * 10);
-	vecSrc.z = pev->absmin.z + (pev->size.z * 0.7);
+	vecSrc.z = pev->absmin.z + (pev->size.z * 0.7f);
 	ClearMultiDamage();
 
 	while ( iShots > 0 )
@@ -612,7 +612,7 @@ void CBasePlayer::Q_FireBullets(int iShots, Vector vecDir, Vector vecSpread)
 		Vector vecPath = vecDir + ( RANDOM_FLOAT( -1, 1 ) * vecSpread.x * gpGlobals->v_right ) + ( RANDOM_FLOAT( -1, 1 ) * vecSpread.y * gpGlobals->v_up );
 		Vector vecEnd = vecSrc + ( vecPath * 2048 );
 		UTIL_TraceLine( vecSrc, vecEnd, dont_ignore_monsters, ENT(pev), &trace );
-		if (trace.flFraction != 1.0)
+		if (trace.flFraction != 1.0f)
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(trace.pHit);
 			if (pEntity && pEntity->pev->takedamage && pEntity->IsPlayer() )
@@ -644,14 +644,14 @@ void Q_RadiusDamage( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDa
 		{
 			if (pEnt->pev->takedamage)
 			{
-				Vector vecOrg = pEnt->pev->origin + ((pEnt->pev->mins + pEnt->pev->maxs) * 0.5);
-				float flPoints = 0.5 * (pInflictor->pev->origin - vecOrg).Length();
+				Vector vecOrg = pEnt->pev->origin + ((pEnt->pev->mins + pEnt->pev->maxs) * 0.5f);
+				float flPoints = 0.5f * (pInflictor->pev->origin - vecOrg).Length();
 				if (flPoints < 0)
 					flPoints = 0;
 				flPoints = flDamage - flPoints;
 				
 				if (pEnt == pAttacker)
-					flPoints = flPoints * 0.5;
+					flPoints = flPoints * 0.5f;
 				if (flPoints > 0)
 				{
 					if ( Q_CanDamage( pEnt, pInflictor ) )
@@ -668,7 +668,7 @@ void LightningHit(CBaseEntity *pTarget, CBaseEntity *pAttacker, Vector vecHitPos
 {
 
 #ifndef CLIENT_DLL
-	SpawnBlood( vecHitPos, BLOOD_COLOR_RED, flDamage * 1.5 );
+	SpawnBlood( vecHitPos, BLOOD_COLOR_RED, flDamage * 1.5f );
 
 	if ( g_pGameRules->PlayerRelationship( pTarget, pAttacker ) != GR_TEAMMATE )
 	{
@@ -734,9 +734,9 @@ void CBasePlayer::W_FireAxe()
 	// Swing forward 64 units
 	UTIL_MakeVectors(pev->v_angle);
 	UTIL_TraceLine( vecSrc, vecSrc + (gpGlobals->v_forward * 64), dont_ignore_monsters, ENT(pev), &trace );
-	if (trace.flFraction == 1.0)
+	if (trace.flFraction == 1.0f)
 		return;
-	
+
 	Vector vecOrg = trace.vecEndPos - gpGlobals->v_forward * 4;
 
 	CBaseEntity *pEntity = CBaseEntity::Instance(trace.pHit);
@@ -759,7 +759,7 @@ void CBasePlayer::W_FireAxe()
 // Single barrel shotgun
 void CBasePlayer::W_FireShotgun( int iQuadSound )
 {
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usShotgunSingle, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usShotgunSingle, 0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
 
 	if (gpGlobals->deathmatch != 4 )
 		*m_pCurrentAmmo -= 1;
@@ -770,7 +770,7 @@ void CBasePlayer::W_FireShotgun( int iQuadSound )
 
 void CBasePlayer::W_FireHook( void )
 {
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST | FEV_GLOBAL, edict(), g_usHook, 0, (float *)&pev->origin, (float *)&pev->angles, 0.0, 0.0, 0, 0, 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST | FEV_GLOBAL, edict(), g_usHook, 0, pev->origin, pev->angles, 0.0, 0.0, 0, 0, 0, 0 );
 
 	Throw_Grapple();
 }
@@ -794,7 +794,7 @@ void CBasePlayer::W_FireSuperShotgun( int iQuadSound )
 		return;
 	}
 
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usShotgunDouble, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usShotgunDouble, 0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
 
 	if (gpGlobals->deathmatch != 4 )
 		*m_pCurrentAmmo -= 2;
@@ -805,7 +805,7 @@ void CBasePlayer::W_FireSuperShotgun( int iQuadSound )
 // Rocket launcher
 void CBasePlayer::W_FireRocket( int iQuadSound )
 {
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usRocket, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usRocket, 0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
 
 	if (gpGlobals->deathmatch != 4 )
 		*m_pCurrentAmmo -= 1;
@@ -820,7 +820,7 @@ void CBasePlayer::W_FireRocket( int iQuadSound )
 // Grenade launcher
 void CBasePlayer::W_FireGrenade( int iQuadSound )
 {       
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usGrenade, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usGrenade, 0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
 
 	if (gpGlobals->deathmatch != 4 )
 		*m_pCurrentAmmo -= 1;
@@ -851,7 +851,7 @@ void CBasePlayer::W_FireLightning( int iQuadSound )
 		//This should already be IT_LIGHTNING but what the heck.
 		if ( m_iQuakeWeapon == IT_LIGHTNING )
 		{
-			 PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, (float *)&pev->origin, (float *)&pev->angles, 0.0, 0.0, 0, 1, 0, 0 );
+			 PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, pev->origin, pev->angles, 0.0, 0.0, 0, 1, 0, 0 );
 
 			 if ( m_pActiveItem )
 				  ((CQuakeGun*)m_pActiveItem)->DestroyEffect();
@@ -868,13 +868,13 @@ void CBasePlayer::W_FireLightning( int iQuadSound )
 	if ( m_flLightningTime <= gpGlobals->time )
 	{
 		playsound = true;
-		m_flLightningTime = gpGlobals->time + 0.6;
+		m_flLightningTime = gpGlobals->time + 0.6f;
 	}
 
 	// explode if under water
 	if (pev->waterlevel > 1)
 	{
-		if ( (gpGlobals->deathmatch > 3) && (RANDOM_FLOAT(0, 1) <= 0.5) )
+		if ( (gpGlobals->deathmatch > 3) && (RANDOM_FLOAT(0, 1) <= 0.5f) )
 		{
 			strcpy( gszQ_DeathType, "selfwater" );
 			TakeDamage( pev, pev, 4000, DMG_GENERIC );
@@ -891,7 +891,7 @@ void CBasePlayer::W_FireLightning( int iQuadSound )
 		}
 	}
 
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, (float *)&pev->origin, (float *)&pev->angles, 0.0, 0.0, iQuadSound, 0, playsound, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usLightning, 0, pev->origin, pev->angles, 0.0, 0.0, iQuadSound, 0, playsound, 0 );
 
 #if !defined( CLIENT_DLL )
 	
@@ -904,7 +904,7 @@ void CBasePlayer::W_FireLightning( int iQuadSound )
 	UTIL_MakeVectors( pev->v_angle );
 	UTIL_TraceLine( vecOrg, vecOrg + (gpGlobals->v_forward * 600), ignore_monsters, ENT(pev), &trace );
 
-	Vector vecDir = gpGlobals->v_forward + ( 0.001 * gpGlobals->v_right ) + ( 0.001 * gpGlobals->v_up );
+	Vector vecDir = gpGlobals->v_forward + ( 0.001f * gpGlobals->v_right ) + ( 0.001f * gpGlobals->v_up );
 	// Do damage
 	LightningDamage(pev->origin, trace.vecEndPos + (gpGlobals->v_forward * 4), this, 30, vecDir );
 	
@@ -914,11 +914,11 @@ void CBasePlayer::W_FireLightning( int iQuadSound )
 // Super Nailgun
 void CBasePlayer::W_FireSuperSpikes( int iQuadSound )
 {
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usSuperSpike, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, m_iNailOffset > 0.0 ? 1 : 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usSuperSpike, 0.0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, m_iNailOffset > 0.0 ? 1 : 0, 0 );
 
 	if (gpGlobals->deathmatch != 4 )
 		*m_pCurrentAmmo -= 2;
-	m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
+	m_flNextAttack = UTIL_WeaponTimeBase() + 0.1f;
 
 	// Fire the Nail
 	Vector vecDir = GetAutoaimVector( AUTOAIM_5DEGREES );
@@ -943,7 +943,7 @@ void CBasePlayer::W_FireSpikes( int iQuadSound )
 		return;
 	}
 
-	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usSpike, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, m_iNailOffset > 0.0 ? 1 : 0, 0 );
+	PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usSpike, 0.0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, m_iNailOffset > 0.0f ? 1 : 0, 0 );
 
 	// Fire left then right
 	if (m_iNailOffset == 2)
@@ -953,7 +953,7 @@ void CBasePlayer::W_FireSpikes( int iQuadSound )
 
 	if (gpGlobals->deathmatch != 4 )
 		*m_pCurrentAmmo -= 1;
-	m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
+	m_flNextAttack = UTIL_WeaponTimeBase() + 0.1f;
 
 	// Fire the nail
 	UTIL_MakeVectors( pev->v_angle );
@@ -976,68 +976,67 @@ void CBasePlayer::W_Attack( int iQuadSound )
 	if (m_iQuakeWeapon == IT_AXE)
 	{
 		if( m_iRuneStatus == ITEM_RUNE3_FLAG )
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.3;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.3f;
 		else
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.5f;
 
-		PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usAxeSwing, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
+		PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usAxeSwing, 0, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
 
 		// Delay attack for 0.3
-		m_flAxeFire = gpGlobals->time + 0.3;
+		m_flAxeFire = gpGlobals->time + 0.3f;
 
-		PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usAxe, 0.3, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
-
+		PLAYBACK_EVENT_FULL( FEV_NOTHOST, edict(), m_usAxe, 0.3, g_vecZero, g_vecZero, 0.0, 0.0, iQuadSound, 0, 0, 0 );
 	}
 	else if (m_iQuakeWeapon == IT_SHOTGUN)
 	{
 		if( m_iRuneStatus == ITEM_RUNE3_FLAG )
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.3;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.3f;
 		else
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.5f;
 
 		W_FireShotgun( iQuadSound );
 	}
 	else if (m_iQuakeWeapon == IT_SUPER_SHOTGUN)
 	{
 		if( m_iRuneStatus == ITEM_RUNE3_FLAG )
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.4;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.4f;
 		else
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.7;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.7f;
 
 		W_FireSuperShotgun( iQuadSound );
 	}
 	else if (m_iQuakeWeapon == IT_NAILGUN)
 	{
-		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
-	
+		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1f;
+
 		W_FireSpikes( iQuadSound );
 	}
 	else if (m_iQuakeWeapon == IT_SUPER_NAILGUN)
 	{
-		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
+		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1f;
 		W_FireSpikes( iQuadSound );
 	}
 	else if (m_iQuakeWeapon == IT_GRENADE_LAUNCHER)
 	{
 		if( m_iRuneStatus == ITEM_RUNE3_FLAG )
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.3;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.3f;
 		else
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.6;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.6f;
 
 		W_FireGrenade( iQuadSound );
 	}
 	else if (m_iQuakeWeapon == IT_ROCKET_LAUNCHER)
 	{
 		if( m_iRuneStatus == ITEM_RUNE3_FLAG )
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.4;
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.4f;
 		else
-			m_flNextAttack = UTIL_WeaponTimeBase() + 0.8;
-			
+			m_flNextAttack = UTIL_WeaponTimeBase() + 0.8f;
+
 		W_FireRocket( iQuadSound );
 	}
 	else if (m_iQuakeWeapon == IT_LIGHTNING)
 	{
-		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
+		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1f;
 
 		// Play the lightning start sound if gun just started firing
 		if (m_afButtonPressed & IN_ATTACK)
@@ -1050,10 +1049,11 @@ void CBasePlayer::W_Attack( int iQuadSound )
 		if( !m_bHook_Out )
 			W_FireHook();
 
-		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
+		m_flNextAttack = UTIL_WeaponTimeBase() + 0.1f;
 	}
 
 	// Make player attack
 	if ( pev->health >= 0 )
 		SetAnimation( PLAYER_ATTACK1 );
 }
+

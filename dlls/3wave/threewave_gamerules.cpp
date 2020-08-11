@@ -404,7 +404,7 @@ void CThreeWave::PlayerSpawn( CBasePlayer *pPlayer )
 		pPlayer->pev->flags |= FL_NOTARGET;
 		pPlayer->m_afPhysicsFlags |= PFLAG_OBSERVER;
 		pPlayer->m_iHideHUD |= HIDEHUD_WEAPONS | HIDEHUD_FLASHLIGHT | HIDEHUD_HEALTH; 
-		pPlayer->m_flFlagStatusTime = gpGlobals->time + 0.1;
+		pPlayer->m_flFlagStatusTime = gpGlobals->time + 0.1f;
 	}
 	else
 	{
@@ -453,7 +453,7 @@ void CThreeWave::PlayerSpawn( CBasePlayer *pPlayer )
 			pPlayer->m_iQuakeWeapon = pPlayer->W_BestWeapon();
 			pPlayer->W_SetCurrentAmmo();
 
-			pPlayer->m_flFlagStatusTime = gpGlobals->time + 0.1;
+			pPlayer->m_flFlagStatusTime = gpGlobals->time + 0.1f;
 		}
 	}
 
@@ -655,7 +655,7 @@ void CThreeWave::ClientDisconnected( edict_t *pClient )
 							GetTeamName( pPlayer->pev->team ) );
 				}
    
-				pEnt->pev->velocity = pPlayer->pev->velocity * 1.2; 
+				pEnt->pev->velocity = pPlayer->pev->velocity * 1.2f; 
 				pEnt->pev->angles.x = 0;
 
 				CItemFlag *pFlag = (CItemFlag *)pEnt; 
@@ -663,7 +663,7 @@ void CThreeWave::ClientDisconnected( edict_t *pClient )
 				pFlag->m_flDroppedTime = gpGlobals->time + TEAM_CAPTURE_FLAG_RETURN_TIME;
 
 				PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-				pPlayer->edict(), g_usCarried, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+				pPlayer->edict(), g_usCarried, 0, g_vecZero, g_vecZero, 
 				0.0, 0.0, pPlayer->entindex(), pPlayer->pev->team, 1, 0 );
 
 				MESSAGE_BEGIN( MSG_ALL, gmsgCTFMsgs, NULL );
@@ -674,7 +674,7 @@ void CThreeWave::ClientDisconnected( edict_t *pClient )
 					WRITE_STRING( STRING( pPlayer->pev->netname ) );
 				MESSAGE_END();
 
-				m_flFlagStatusTime = gpGlobals->time + 0.1;
+				m_flFlagStatusTime = gpGlobals->time + 0.1f;
 
 				pPlayer->m_bHasFlag = FALSE;
 			}
@@ -685,7 +685,7 @@ void CThreeWave::ClientDisconnected( edict_t *pClient )
 				CItemRune *pRune = (CItemRune*)CBaseEntity::Create( g_RuneEntityName[pPlayer->m_iRuneStatus], pPlayer->pev->origin, pPlayer->pev->angles, pPlayer->edict() );
 				if( pRune )
 				{
-					pRune->pev->velocity = pPlayer->pev->velocity * 1.5;
+					pRune->pev->velocity = pPlayer->pev->velocity * 1.5f;
 					pRune->pev->angles.x = 0;
 					pRune->dropped = true;
 
@@ -902,7 +902,7 @@ void CThreeWave::PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars
 		pFlag->Dropped = TRUE; 
 
 		PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-		pVictim->edict(), g_usCarried, 0, (float *)&g_vecZero, (float *)&g_vecZero, 
+		pVictim->edict(), g_usCarried, 0, g_vecZero, g_vecZero, 
 		0.0, 0.0, pVictim->entindex(), pVictim->pev->team, 1, 0 );
 
 		pFlag->m_flDroppedTime = gpGlobals->time + TEAM_CAPTURE_FLAG_RETURN_TIME;
@@ -917,7 +917,7 @@ void CThreeWave::PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars
 
 		pVictim->m_bHasFlag = FALSE;
 
-		m_flFlagStatusTime = gpGlobals->time + 0.1;
+		m_flFlagStatusTime = gpGlobals->time + 0.1f;
 	}
 	else
 	{

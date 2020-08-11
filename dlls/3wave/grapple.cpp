@@ -36,7 +36,7 @@ void CGrapple::Reset_Grapple()
 	pOwner->m_bHook_Out = FALSE;
 
 	PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-	pOwner->edict(), g_usCable, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+	pOwner->edict(), g_usCable, 0, g_vecZero, g_vecZero, 
 	0.0, 0.0, entindex(), pev->team, 1, 0 );
 
 	STOP_SOUND( edict(), CHAN_WEAPON, "weapons/grhang.wav" );
@@ -134,7 +134,7 @@ void CGrapple::GrappleTouch( CBaseEntity *pOther )
 	pev->enemy = pOther->edict();// remember this guy!
 	SetThink( &CGrapple::Grapple_Track );
 	pev->nextthink = gpGlobals->time;
-	m_flNextIdleTime = gpGlobals->time + 0.1;
+	m_flNextIdleTime = gpGlobals->time + 0.1f;
 	pev->solid = SOLID_NOT;
 	SetTouch( NULL );
 }
@@ -216,7 +216,7 @@ void CGrapple::Grapple_Track()
 	else
 		pev->velocity = pEnemy->pev->velocity;
 
-	pev->nextthink = gpGlobals->time + 0.1;
+	pev->nextthink = gpGlobals->time + 0.1f;
 }
 
 void CBasePlayer::Service_Grapple()
@@ -261,7 +261,7 @@ void CBasePlayer::Service_Grapple()
 			m_ppHook->m_flNextIdleTime = gpGlobals->time + RANDOM_LONG( 1, 3 );
 
 			PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-			edict(), g_usCable, 0, (float *)&g_vecZero, (float *)&g_vecZero, 
+			edict(), g_usCable, 0, g_vecZero, g_vecZero, 
 			0.0, 0.0, m_ppHook->entindex(), pev->team, 1, 0 );
 		}
 		else if( m_ppHook->m_flNextIdleTime <= gpGlobals->time )
@@ -291,13 +291,13 @@ void CGrapple::OnAirThink()
 
 	UTIL_TraceLine( pev->origin, pOwner->pev->origin, ignore_monsters, ENT( pev ), &tr );
 
-	if( tr.flFraction < 1.0 )
+	if( tr.flFraction < 1.0f )
 	{
 		Reset_Grapple();
 		return;
 	}
 
-	pev->nextthink = gpGlobals->time + 0.5;
+	pev->nextthink = gpGlobals->time + 0.5f;
 }
 
 void CGrapple::Spawn()
@@ -310,7 +310,7 @@ void CGrapple::Spawn()
 	SetTouch( &CGrapple::GrappleTouch );
 	SetThink( &CGrapple::OnAirThink );
 
-	pev->nextthink = gpGlobals->time + 0.1;
+	pev->nextthink = gpGlobals->time + 0.1f;
 }
 
 LINK_ENTITY_TO_CLASS( hook, CGrapple ); 
@@ -343,7 +343,7 @@ void CBasePlayer::Throw_Grapple()
 		m_ppHook->pev->fixangle = TRUE;
 
 		PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, 
-		edict(), g_usCable, 0, (float*)&g_vecZero, (float*)&g_vecZero, 
+		edict(), g_usCable, 0, g_vecZero, g_vecZero, 
 		0.0, 0.0, m_ppHook->entindex(), pev->team, 0, 0 );
 		
 		m_bHook_Out = TRUE;
