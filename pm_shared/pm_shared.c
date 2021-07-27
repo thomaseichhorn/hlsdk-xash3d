@@ -20,7 +20,7 @@
 #include <stdlib.h> // atoi
 #include <ctype.h>  // isspace
 #include "mathlib.h"
-#ifdef HAVE_TGMATH_H
+#if HAVE_TGMATH_H
 #include <tgmath.h>
 #endif
 
@@ -33,7 +33,7 @@
 
 int g_bhopcap = 1;
 
-#ifdef CLIENT_DLL
+#if CLIENT_DLL
 // Spectator Mode
 int iJumpSpectator;
 extern float vJumpOrigin[3];
@@ -42,7 +42,7 @@ extern float vJumpAngles[3];
 
 static int pm_shared_initialized = 0;
 
-#ifdef _MSC_VER
+#if _MSC_VER
 #pragma warning( disable : 4305 )
 #endif
 
@@ -63,20 +63,7 @@ playermove_t *pmove = NULL;
 #define	STOP_EPSILON		0.1f
 
 #define CTEXTURESMAX		512			// max number of textures loaded
-#define CBTEXTURENAMEMAX	13			// only load first n chars of name
-
-#define CHAR_TEX_CONCRETE	'C'			// texture types
-#define CHAR_TEX_METAL		'M'
-#define CHAR_TEX_DIRT		'D'
-#define CHAR_TEX_VENT		'V'
-#define CHAR_TEX_GRATE		'G'
-#define CHAR_TEX_TILE		'T'
-#define CHAR_TEX_SLOSH		'S'
-#define CHAR_TEX_WOOD		'W'
-#define CHAR_TEX_COMPUTER	'P'
-#define CHAR_TEX_GLASS		'Y'
-#define CHAR_TEX_FLESH		'F'
-#define CHAR_TEX_SNOW		'O'
+#include "pm_materials.h"
 
 #define STEP_CONCRETE		0		// default step sound
 #define STEP_METAL		1		// metal floor
@@ -100,7 +87,7 @@ playermove_t *pmove = NULL;
 #define PLAYER_DUCKING_MULTIPLIER	0.333f
 
 // double to float warning
-#ifdef _MSC_VER
+#if _MSC_VER
 #pragma warning(disable : 4244)
 #endif
 
@@ -533,7 +520,7 @@ int PM_MapTextureTypeStepType( char chTextureType )
 			return STEP_TILE;
 		case CHAR_TEX_SLOSH:
 			return STEP_SLOSH;
-		case CHAR_TEX_SNOW:
+		case CHAR_TEX_SNOW_OPFOR:
 			return STEP_SNOW;
 	}
 }
@@ -674,7 +661,7 @@ void PM_UpdateStepSound( void )
 				pmove->flTimeStepSound = fWalking ? 400 : 300;
 				break;
 			case CHAR_TEX_DIRT:
-			case CHAR_TEX_SNOW:
+			case CHAR_TEX_SNOW_OPFOR:
 				fvol = fWalking ? 0.25f : 0.55f;
 				pmove->flTimeStepSound = fWalking ? 400 : 300;
 				break;
@@ -1837,7 +1824,7 @@ void PM_SpectatorMove( void )
 	
 	if( pmove->iuser1 == OBS_ROAMING )
 	{
-#ifdef CLIENT_DLL
+#if CLIENT_DLL
 		// jump only in roaming mode
 		if( iJumpSpectator )
 		{
