@@ -344,7 +344,7 @@ IMPLEMENT_SAVERESTORE( CBasePlayerItem, CBaseAnimating )
 
 TYPEDESCRIPTION	CBasePlayerWeapon::m_SaveData[] =
 {
-#if defined( CLIENT_WEAPONS )
+#if CLIENT_WEAPONS
 	DEFINE_FIELD( CBasePlayerWeapon, m_flNextPrimaryAttack, FIELD_FLOAT ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_flNextSecondaryAttack, FIELD_FLOAT ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_flTimeWeaponIdle, FIELD_FLOAT ),
@@ -528,7 +528,7 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 
 BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
 {
-#if defined( CLIENT_WEAPONS )
+#if CLIENT_WEAPONS
 	if( !isPredicted )
 #else
 	if( 1 )
@@ -538,14 +538,12 @@ BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
 	}
 	else
 	{
-		return ( attack_time <= 0.0f ) ? TRUE : FALSE;
+		return ( (static_cast<int>(::floor(attack_time * 1000.0f)) * 1000.0f) <= 0.0f) ? TRUE : FALSE;
 	}
 }
 
 void CBasePlayerWeapon::ItemPostFrame( void )
 {
-	WeaponTick();
-
 	if( ( m_fInReload ) && ( m_pPlayer->m_flNextAttack <= UTIL_WeaponTimeBase() ) )
 	{
 		// complete the reload. 
@@ -784,7 +782,7 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal )
 
 	m_pPlayer->pev->weaponanim = iAnim;
 
-#if defined( CLIENT_WEAPONS )
+#if CLIENT_WEAPONS
 	if( skiplocal && ENGINE_CANSKIP( m_pPlayer->edict() ) )
 		return;
 #endif
@@ -855,16 +853,38 @@ BOOL CBasePlayerWeapon::AddSecondaryAmmo( int iCount, const char *szName, int iM
 //=========================================================
 BOOL CBasePlayerWeapon::IsUseable( void )
 {
-	if( m_iClip <= 0 )
+	if( m_iClip > 0 )
 	{
-		if( m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] <= 0 && iMaxAmmo1() != -1 )			
+		return TRUE;
+	}
+
+	// Player has unlimited ammo for this weapon or does not use magazines
+	if( iMaxAmmo1() == WEAPON_NOCLIP )
+	{
+		return TRUE;
+	}
+
+	if( m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] > 0 )
+	{
+		return TRUE;
+	}
+
+	if( pszAmmo2() )
+	{
+		// Player has unlimited ammo for this weapon or does not use magazines
+		if( iMaxAmmo2() == WEAPON_NOCLIP )
 		{
-			// clip is empty (or nonexistant) and the player has no more ammo of this type. 
-			return FALSE;
+			return TRUE;
+		}
+
+		if( m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] > 0 )
+		{
+			return TRUE;
 		}
 	}
 
-	return TRUE;
+	// clip is empty (or nonexistant) and the player has no more ammo of this type. 
+	return FALSE;
 }
 
 BOOL CBasePlayerWeapon::CanDeploy( void )
@@ -1056,13 +1076,13 @@ int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 	{
 		// blindly call with m_iDefaultAmmo. It's either going to be a value or zero. If it is zero,
 		// we only get the ammo in the weapon's clip, which is what we want. 
-		iReturn = pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, pszAmmo1(), iMaxClip(), iMaxAmmo1() );
+		iReturn |= pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, pszAmmo1(), iMaxClip(), iMaxAmmo1() );
 		m_iDefaultAmmo = 0;
 	}
 
 	if( pszAmmo2() != NULL )
 	{
-		iReturn = pWeapon->AddSecondaryAmmo( 0, pszAmmo2(), iMaxAmmo2() );
+		iReturn |= pWeapon->AddSecondaryAmmo( 0, pszAmmo2(), iMaxAmmo2() );
 	}
 
 	return iReturn;
