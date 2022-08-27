@@ -203,7 +203,7 @@ void CM249::PrimaryAttack()
 	if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase())
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
 
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.2f;
 }
 
 
@@ -219,20 +219,34 @@ void CM249::Reload(void)
 	}
 }
 
-void CM249::WeaponTick()
+void CM249::ItemPostFrame()
 {
+	if (!m_fInReload)
+	{
+		m_iVisibleClip = m_iClip;
+	}
 	if ( m_fInSpecialReload )
 	{
 		if (m_pPlayer->m_flNextAttack <= UTIL_WeaponTimeBase())
 		{
-			UpdateTape();
+			int maxClip;
+	#ifndef CLIENT_DLL
+			maxClip = iMaxClip();
+	#else
+			ItemInfo itemInfo;
+			GetItemInfo( &itemInfo );
+			maxClip = itemInfo.iMaxClip;
+	#endif
+			m_iVisibleClip = m_iClip + Q_min( maxClip - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] );
+
+			UpdateTape(m_iVisibleClip);
 			m_fInSpecialReload = FALSE;
 			SendWeaponAnim( M249_RELOAD1, UseDecrement(), pev->body );
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 2.4;
 		}
-
-		return;
 	}
+
+	CBasePlayerWeapon::ItemPostFrame();
 }
 
 void CM249::WeaponIdle(void)
@@ -240,6 +254,8 @@ void CM249::WeaponIdle(void)
 	ResetEmptySound();
 
 	m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
+
+	UpdateTape(m_iVisibleClip);
 
 	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
 		return;
@@ -254,19 +270,35 @@ void CM249::WeaponIdle(void)
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 155.0/25.0;
 	}
 
-	SendWeaponAnim(iAnim);
+	SendWeaponAnim(iAnim, UseDecrement(), pev->body);
 
 	m_flTimeWeaponIdle = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15); // how long till we do this again.
 }
 
 void CM249::UpdateTape()
 {
-	if (m_iClip == 0) {
-		pev->body = 8;
-	} else if (m_iClip > 0 && m_iClip < 8) {
-		pev->body = 9 - m_iClip;
+	UpdateTape(m_iClip);
+	m_iVisibleClip = m_iClip;
+}
+
+void CM249::UpdateTape(int clip)
+{
+	pev->body = BodyFromClip(clip);
+}
+
+int CM249::BodyFromClip()
+{
+	return BodyFromClip(m_iVisibleClip);
+}
+
+int CM249::BodyFromClip(int clip)
+{
+	if (clip == 0) {
+		return 8;
+	} else if (clip > 0 && clip < 8) {
+		return 9 - clip;
 	} else {
-		pev->body = 0;
+		return 0;
 	}
 }
 

@@ -36,7 +36,7 @@ extern globalvars_t *gpGlobals;
 extern int g_iUser1;
 
 // Pool of client side entities/entvars_t
-static entvars_t ev[32];
+static entvars_t ev[MAX_WEAPONS];
 static int num_ents = 0;
 
 // The entity we'll use to represent the local client
@@ -45,7 +45,7 @@ static CBasePlayer player;
 // Local version of game .dll global variables ( time, etc. )
 static globalvars_t Globals; 
 
-static CBasePlayerWeapon *g_pWpns[32];
+static CBasePlayerWeapon *g_pWpns[MAX_WEAPONS];
 
 float g_flApplyVel = 0.0;
 int g_irunninggausspred = 0;
@@ -802,7 +802,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	if( !pWeapon )
 		return;
 
-	for( i = 0; i < 32; i++ )
+	for( i = 0; i < MAX_WEAPONS; i++ )
 	{
 		pCurrent = g_pWpns[i];
 		if( !pCurrent )
@@ -895,6 +895,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	else if( player.m_pActiveItem->m_iId == WEAPON_M249 )
 	{
 		player.ammo_556 = (int)from->client.vuser2[1];
+		( (CM249 *)player.m_pActiveItem )->m_iVisibleClip = (int)from->client.vuser2[2];
 	}
 	else if( player.m_pActiveItem->m_iId == WEAPON_SHOCKRIFLE )
 	{
@@ -973,8 +974,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	if( player.m_pActiveItem->m_iId == WEAPON_RPG )
 	{
-		from->client.vuser2[1] = ( (CRpg *)player.m_pActiveItem)->m_fSpotActive;
-		from->client.vuser2[2] = ( (CRpg *)player.m_pActiveItem)->m_cActiveRockets;
+		to->client.vuser2[1] = ( (CRpg *)player.m_pActiveItem)->m_fSpotActive;
+		to->client.vuser2[2] = ( (CRpg *)player.m_pActiveItem)->m_cActiveRockets;
 	}
 	else if ( player.m_pActiveItem->m_iId == WEAPON_EAGLE )
 	{
@@ -1004,31 +1005,21 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//  over the wire ( fixes some animation glitches )
 	if( g_runfuncs && ( HUD_GetWeaponAnim() != to->client.weaponanim ) )
 	{
-		int body = 2;
-
-		//Pop the model to body 0.
-		if( pWeapon == &g_Tripmine )
-			 body = 0;
+		int body = 0;
 
 		//Show laser sight/scope combo
 		if( pWeapon == &g_Python && bIsMultiplayer() )
 			 body = 1;
 
 		if (pWeapon == &g_M249) {
-			if (g_M249.m_iClip == 0) {
-				body = 8;
-			} else if (g_M249.m_iClip > 0 && g_M249.m_iClip < 8) {
-				body = 9 - g_M249.m_iClip;
-			} else {
-				body = 0;
-			}
+			body = g_M249.BodyFromClip();
 		}
 
 		// Force a fixed anim down to viewmodel
 		HUD_SendWeaponAnim( to->client.weaponanim, body, 1 );
 	}
 
-	for( i = 0; i < 32; i++ )
+	for( i = 0; i < MAX_WEAPONS; i++ )
 	{
 		pCurrent = g_pWpns[i];
 

@@ -93,8 +93,6 @@ public:
 
 #define WEAPON_SUIT				31	// ?????
 
-#define MAX_WEAPONS			32
-
 #define MAX_NORMAL_BATTERY	100
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
@@ -426,9 +424,6 @@ extern DLL_GLOBAL	short	g_sModelIndexBloodSpray;// holds the sprite index for bl
 extern DLL_GLOBAL	short	g_sModelIndexSpore1;
 extern DLL_GLOBAL	short	g_sModelIndexSpore2;
 extern DLL_GLOBAL	short	g_sModelIndexSpore3;
-
-extern DLL_GLOBAL  	short	g_sModelIndexBigSpit;
-extern DLL_GLOBAL  	short	g_sModelIndexTinySpit;
 
 extern void ClearMultiDamage(void);
 extern void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker );
@@ -925,7 +920,7 @@ public:
 
 	float m_flRechargeTime;
 
-	int m_iFirePhase;// don't save me.
+	int m_iFirePhase;
 
 	virtual BOOL UseDecrement( void )
 	{ 
@@ -1215,6 +1210,9 @@ public:
 	int Swing(int fFirst);
 	BOOL Deploy(void);
 	void Holster(int skiplocal = 0);
+#if CROWBAR_IDLE_ANIM
+	void WeaponIdle();
+#endif
 	int m_iSwing;
 	TraceResult m_trHit;
 
@@ -1251,7 +1249,7 @@ public:
 	BOOL Deploy(void);
 	void Holster(int skiplocal = 0);
 	void Reload(void);
-	void WeaponTick();
+	void ItemPostFrame();
 	void WeaponIdle(void);
 	virtual BOOL ShouldWeaponIdle(void) { return TRUE; }
 	float m_flNextAnimTime;
@@ -1267,6 +1265,11 @@ public:
 	}
 
 	void UpdateTape();
+	void UpdateTape(int clip);
+	int BodyFromClip();
+	int BodyFromClip(int clip);
+
+	int m_iVisibleClip;
 
 private:
 	unsigned short m_usM249;

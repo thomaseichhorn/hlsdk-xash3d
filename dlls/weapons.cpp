@@ -30,7 +30,6 @@
 #include "soundent.h"
 #include "decals.h"
 #include "gamerules.h"
-#include "gearbox_weapons.h"
 
 extern CGraph WorldGraph;
 extern int gEvilImpulse101;
@@ -46,13 +45,6 @@ DLL_GLOBAL	short g_sModelIndexWExplosion;// holds the index for the underwater e
 DLL_GLOBAL	short g_sModelIndexBubbles;// holds the index for the bubbles model
 DLL_GLOBAL	short g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
 DLL_GLOBAL	short g_sModelIndexBloodSpray;// holds the sprite index for splattered blood
-
-DLL_GLOBAL	short g_sModelIndexSpore1; // holds the index for the spore explosion 1
-DLL_GLOBAL	short g_sModelIndexSpore2; // holds the index for the spore explosion 2
-DLL_GLOBAL	short g_sModelIndexSpore3; // holds the index for the spore explosion 3
-
-DLL_GLOBAL	short g_sModelIndexBigSpit; // holds the index for the bullsquid big spit.
-DLL_GLOBAL	short g_sModelIndexTinySpit; // holds the index for the bullsquid tiny spit.
 
 ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
 AmmoInfo CBasePlayerItem::AmmoInfoArray[MAX_AMMO_SLOTS];
@@ -418,13 +410,6 @@ void W_Precache( void )
 
 	// Used by spore grenades.
 	PRECACHE_MODEL( "models/spore.mdl" );
-	g_sModelIndexSpore1 = PRECACHE_MODEL( "sprites/spore_exp_01.spr" );
-	g_sModelIndexSpore2 = PRECACHE_MODEL( "sprites/spore_exp_b_01.spr" );
-	g_sModelIndexSpore3 = PRECACHE_MODEL( "sprites/spore_exp_c_01.spr" );
-
-	g_sModelIndexBigSpit = PRECACHE_MODEL( "sprites/bigspit.spr" );
-	g_sModelIndexTinySpit = PRECACHE_MODEL( "sprites/tinyspit.spr" );
-
 	PRECACHE_SOUND( "weapons/splauncher_impact.wav" );//explosion aftermaths
 
 	PRECACHE_SOUND( "weapons/spore_hit1.wav" );//sporegrenade
@@ -864,7 +849,7 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 {
 	if( UseDecrement() )
-		skiplocal = 1;
+		skiplocal = !pev->oldbuttons;
 	else
 		skiplocal = 0;
 
@@ -1647,7 +1632,6 @@ TYPEDESCRIPTION	CShotgun::m_SaveData[] =
 {
 	DEFINE_FIELD( CShotgun, m_flNextReload, FIELD_TIME ),
 	DEFINE_FIELD( CShotgun, m_fInSpecialReload, FIELD_INTEGER ),
-	DEFINE_FIELD( CShotgun, m_flNextReload, FIELD_TIME ),
 	// DEFINE_FIELD( CShotgun, m_iShell, FIELD_INTEGER ),
 	DEFINE_FIELD( CShotgun, m_flPumpTime, FIELD_TIME ),
 };
@@ -1682,6 +1666,7 @@ IMPLEMENT_SAVERESTORE( CEgon, CBasePlayerWeapon )
 TYPEDESCRIPTION CHgun::m_SaveData[] =
 {
 	DEFINE_FIELD( CHgun, m_flRechargeTime, FIELD_TIME ),
+	DEFINE_FIELD( CHgun, m_iFirePhase, FIELD_INTEGER ),
 };
 
 IMPLEMENT_SAVERESTORE( CHgun, CBasePlayerWeapon )
