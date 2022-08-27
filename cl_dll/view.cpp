@@ -26,19 +26,12 @@
 //#include "screenfade.h"
 //#include "shake.h"
 #include "hltv.h"
+#include "view.h"
 
 // QUAKECLASSIC
 extern int iMouseInUse;
 extern vec3_t vecTempAngles;
 extern bool bChangeAngles;
-
-#if !defined(M_PI)
-#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-#endif
-
-#if !defined(M_PI_F)
-#define M_PI_F		(float)M_PI
-#endif
 
 extern "C" 
 {
@@ -81,6 +74,7 @@ extern Vector   dead_viewangles;
 vec3_t v_origin, v_angles, v_cl_angles, v_sim_org, v_lastAngles;
 float v_frametime, v_lastDistance;	
 
+vec3_t v_client_aimangles;
 vec3_t g_ev_punchangle;
 
 cvar_t	*scr_ofsx;
@@ -738,6 +732,7 @@ void V_CalcNormalRefdef( struct ref_params_s *pparams )
 
 	// Store off v_angles before munging for third person
 	v_angles = pparams->viewangles;
+	v_client_aimangles = pparams->cl_viewangles;
 	v_lastAngles = pparams->viewangles;
 	//v_cl_angles = pparams->cl_viewangles;	// keep old user mouse angles !
 	if( CL_IsThirdPerson() )
