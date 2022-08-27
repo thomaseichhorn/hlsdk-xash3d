@@ -25,14 +25,6 @@ project (SVDLL)
 
 set (SVDLL_LIBRARY server)
 
-include(CheckIncludeFile)
-check_include_file("tgmath.h" HAVE_TGMATH_H)
-if(HAVE_TGMATH_H)
-	add_definitions(-DHAVE_TGMATH_H)
-endif()
-
-add_definitions(-DCLIENT_WEAPONS -DCROWBAR_IDLE_ANIM -DCROWBAR_FIX_RAPID_CROWBAR -DCROWBAR_DELAY_FIX)
-
 if(NOT MSVC)
 	add_compile_options(-fno-exceptions) # GCC/Clang flag
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
@@ -169,12 +161,16 @@ add_library (${SVDLL_LIBRARY} SHARED ${SVDLL_SOURCES})
 set_target_properties (${SVDLL_LIBRARY} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-if(APPLE OR WIN32 OR ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Android")
 	set(SVDLL_NAME "${SERVER_LIBRARY_NAME}")
 
 	set_target_properties(${SVDLL_LIBRARY} PROPERTIES
 		OUTPUT_NAME ${SVDLL_NAME}
 		PREFIX "")
+endif()
+
+if(MSVC)
+	set_property(TARGET ${SVDLL_LIBRARY} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 install( TARGETS ${SVDLL_LIBRARY}

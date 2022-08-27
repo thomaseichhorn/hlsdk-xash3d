@@ -3095,7 +3095,9 @@ void CBasePlayer::SelectItem( const char *pstr )
 
 	if( m_pActiveItem )
 	{
+		m_pActiveItem->pev->oldbuttons = 1;
 		m_pActiveItem->Deploy();
+		m_pActiveItem->pev->oldbuttons = 0;
 		m_pActiveItem->UpdateItemInfo();
 	}
 }
@@ -3121,7 +3123,11 @@ void CBasePlayer::SelectLastItem( void )
 	CBasePlayerItem *pTemp = m_pActiveItem;
 	m_pActiveItem = m_pLastItem;
 	m_pLastItem = pTemp;
+
+	m_pActiveItem->pev->oldbuttons = 1;
 	m_pActiveItem->Deploy();
+	m_pActiveItem->pev->oldbuttons = 0;
+
 	m_pActiveItem->UpdateItemInfo();
 }
 
@@ -3355,7 +3361,7 @@ void CBasePlayer::ForceClientDllUpdate( void )
 ImpulseCommands
 ============
 */
-extern float g_flWeaponCheat;
+extern cvar_t *g_enable_cheats;
 
 void CBasePlayer::ImpulseCommands()
 {
@@ -3434,7 +3440,7 @@ void CBasePlayer::ImpulseCommands()
 void CBasePlayer::CheatImpulseCommands( int iImpulse )
 {
 #if !HLDEMO_BUILD
-	if( g_flWeaponCheat == 0.0f )
+	if( g_enable_cheats->value == 0 )
 	{
 		return;
 	}
@@ -4594,7 +4600,10 @@ BOOL CBasePlayer::SwitchWeapon( CBasePlayerItem *pWeapon )
 	}
 
 	m_pActiveItem = pWeapon;
+
+	pWeapon->pev->oldbuttons = 1;
 	pWeapon->Deploy();
+	pWeapon->pev->oldbuttons = 0;
 
 	return TRUE;
 }

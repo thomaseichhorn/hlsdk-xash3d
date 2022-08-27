@@ -458,7 +458,8 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 //======================
 //	    GLOCK START
 //======================
-void EV_FireGlock1( event_args_t *args )
+// Shared Glock fire implementation for EV_FireGlock1 and EV_FireGlock2.
+static void EV_FireGlock_Impl( event_args_t *args )
 {
 	int idx;
 	vec3_t origin;
@@ -485,7 +486,7 @@ void EV_FireGlock1( event_args_t *args )
 	if( EV_IsLocal( idx ) )
 	{
 		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( empty ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, 2 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( empty ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, 0 );
 
 		V_PunchAxis( 0, -2.0 );
 	}
@@ -500,53 +501,17 @@ void EV_FireGlock1( event_args_t *args )
 
 	VectorCopy( forward, vecAiming );
 
-	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, 0, args->fparam1, args->fparam2 );
+	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, &g_tracerCount[idx - 1], args->fparam1, args->fparam2 );
+}
+
+void EV_FireGlock1( event_args_t *args )
+{
+	EV_FireGlock_Impl( args );
 }
 
 void EV_FireGlock2( event_args_t *args )
 {
-	int idx;
-	vec3_t origin;
-	vec3_t angles;
-	vec3_t velocity;
-
-	vec3_t ShellVelocity;
-	vec3_t ShellOrigin;
-	int shell;
-	vec3_t vecSrc, vecAiming;
-	vec3_t vecSpread;
-	vec3_t up, right, forward;
-
-	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
-	int empty = args->bparam1;
-
-	AngleVectors( angles, forward, right, up );
-
-	shell = gEngfuncs.pEventAPI->EV_FindModelIndex( "models/shell.mdl" );// brass shell
-
-	if( EV_IsLocal( idx ) )
-	{
-		// Add muzzle flash to current weapon model
-		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( empty ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, 2 );
-
-		V_PunchAxis( 0, -2.0 );
-	}
-
-	EV_GetDefaultShellInfo( args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4 );
-
-	EV_EjectBrass ( ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHELL ); 
-
-	gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/pl_gun3.wav", gEngfuncs.pfnRandomFloat( 0.92, 1.0 ), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong( 0, 3 ) );
-
-	EV_GetGunPosition( args, vecSrc, origin );
-
-	VectorCopy( forward, vecAiming );
-
-	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, &g_tracerCount[idx - 1], args->fparam1, args->fparam2 );
+	EV_FireGlock_Impl( args );
 }
 //======================
 //	   GLOCK END
@@ -567,7 +532,7 @@ void EV_FireShotGunDouble( event_args_t *args )
 	vec3_t ShellOrigin;
 	int shell;
 	vec3_t vecSrc, vecAiming;
-	vec3_t vecSpread;
+	//vec3_t vecSpread;
 	vec3_t up, right, forward;
 	//float flSpread = 0.01;
 
@@ -584,7 +549,7 @@ void EV_FireShotGunDouble( event_args_t *args )
 	{
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( SHOTGUN_FIRE2, 2 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( SHOTGUN_FIRE2, 0 );
 		V_PunchAxis( 0, -10.0 );
 	}
 
@@ -621,7 +586,7 @@ void EV_FireShotGunSingle( event_args_t *args )
 	vec3_t ShellOrigin;
 	int shell;
 	vec3_t vecSrc, vecAiming;
-	vec3_t vecSpread;
+	//vec3_t vecSpread;
 	vec3_t up, right, forward;
 	//float flSpread = 0.01;
 
@@ -638,7 +603,7 @@ void EV_FireShotGunSingle( event_args_t *args )
 	{
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( SHOTGUN_FIRE, 2 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( SHOTGUN_FIRE, 0 );
 
 		V_PunchAxis( 0, -5.0 );
 	}
@@ -695,7 +660,7 @@ void EV_FireMP5( event_args_t *args )
 	{
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_FIRE1 + gEngfuncs.pfnRandomLong( 0, 2 ), 2 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_FIRE1 + gEngfuncs.pfnRandomLong( 0, 2 ), 0 );
 
 		V_PunchAxis( 0, gEngfuncs.pfnRandomFloat( -2, 2 ) );
 	}
@@ -717,14 +682,7 @@ void EV_FireMP5( event_args_t *args )
 	EV_GetGunPosition( args, vecSrc, origin );
 	VectorCopy( forward, vecAiming );
 
-	if( gEngfuncs.GetMaxClients() > 1 )
-	{
-		EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_MP5, 2, &g_tracerCount[idx - 1], args->fparam1, args->fparam2 );
-	}
-	else
-	{
-		EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_MP5, 2, &g_tracerCount[idx - 1], args->fparam1, args->fparam2 );
-	}
+	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_MP5, 2, &g_tracerCount[idx - 1], args->fparam1, args->fparam2 );
 }
 
 // We only predict the animation and sound
@@ -739,7 +697,7 @@ void EV_FireMP52( event_args_t *args )
 
 	if( EV_IsLocal( idx ) )
 	{
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_LAUNCH, 2 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_LAUNCH, 0 );
 		V_PunchAxis( 0, -10 );
 	}
 
@@ -805,7 +763,7 @@ void EV_FirePython( event_args_t *args )
 
 	VectorCopy( forward, vecAiming );
 
-	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_357, 0, 0, args->fparam1, args->fparam2 );
+	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_357, 0, &g_tracerCount[idx - 1], args->fparam1, args->fparam2 );
 }
 //======================
 //	    PHYTON END 
@@ -904,7 +862,7 @@ void EV_FireGauss( event_args_t *args )
 	if( EV_IsLocal( idx ) )
 	{
 		V_PunchAxis( 0.0f, -2.0f );
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( GAUSS_FIRE2, 2 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( GAUSS_FIRE2, 0 );
 
 		if( m_fPrimaryFire == false )
 			 g_flApplyVel = flDamage; 
@@ -1157,8 +1115,8 @@ void EV_Crowbar( event_args_t *args )
 {
 	int idx;
 	vec3_t origin;
-	vec3_t angles;
-	vec3_t velocity;
+	//vec3_t angles;
+	//vec3_t velocity;
 
 	idx = args->entindex;
 	VectorCopy( args->origin, origin );
@@ -1171,13 +1129,13 @@ void EV_Crowbar( event_args_t *args )
 		switch( (g_iSwing++) % 3 )
 		{
 			case 0:
-				gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK1MISS, 1 );
+				gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK1MISS, 0 );
 				break;
 			case 1:
-				gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK2MISS, 1 );
+				gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK2MISS, 0 );
 				break;
 			case 2:
-				gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK3MISS, 1 );
+				gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK3MISS, 0 );
 				break;
 		}
 	}
@@ -1245,9 +1203,9 @@ void EV_FireCrossbow2( event_args_t *args )
 	if( EV_IsLocal( idx ) )
 	{
 		if( args->iparam1 )
-			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE1, 1 );
-		else if( args->iparam2 )
-			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE3, 1 );
+			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE1, 0 );
+		else
+			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE3, 0 );
 	}
 
 	// Store off the old count
@@ -1321,9 +1279,9 @@ void EV_FireCrossbow( event_args_t *args )
 	if( EV_IsLocal( idx ) )
 	{
 		if( args->iparam1 )
-			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE1, 1 );
-		else if ( args->iparam2 )
-			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE3, 1 );
+			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE1, 0 );
+		else
+			gEngfuncs.pEventAPI->EV_WeaponAnimation( CROSSBOW_FIRE3, 0 );
 
 		V_PunchAxis( 0.0f, -2.0f );
 	}
@@ -1363,7 +1321,7 @@ void EV_FireRpg( event_args_t *args )
 	//Only play the weapon anims if I shot it. 
 	if( EV_IsLocal( idx ) )
 	{
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( RPG_FIRE2, 1 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( RPG_FIRE2, 0 );
 
 		V_PunchAxis( 0, -5.0 );
 	}
@@ -1464,7 +1422,7 @@ void EV_EgonFire( event_args_t *args )
 
 	//Only play the weapon anims if I shot it.
 	if( EV_IsLocal( idx ) )
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( g_fireAnims1[gEngfuncs.pfnRandomLong( 0, 3 )], 1 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( g_fireAnims1[gEngfuncs.pfnRandomLong( 0, 3 )], 0 );
 
 	if( iStartup == 1 && EV_IsLocal( idx ) && !( pBeam || pBeam2 || pFlare ) && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 	{
@@ -1595,7 +1553,7 @@ enum hgun_e
 void EV_HornetGunFire( event_args_t *args )
 {
 	int idx; //, iFireMode;
-	vec3_t origin, angles, vecSrc, forward, right, up;
+	vec3_t origin, angles; //, vecSrc, forward, right, up;
 
 	idx = args->entindex;
 	VectorCopy( args->origin, origin );
@@ -1606,7 +1564,7 @@ void EV_HornetGunFire( event_args_t *args )
 	if( EV_IsLocal( idx ) )
 	{
 		V_PunchAxis( 0, gEngfuncs.pfnRandomLong( 0, 2 ) );
-		gEngfuncs.pEventAPI->EV_WeaponAnimation( HGUN_SHOOT, 1 );
+		gEngfuncs.pEventAPI->EV_WeaponAnimation( HGUN_SHOOT, 0 );
 	}
 
 	switch( gEngfuncs.pfnRandomLong( 0, 2 ) )
@@ -1651,6 +1609,7 @@ void EV_TripmineFire( event_args_t *args )
 	pmtrace_t tr;
 
 	idx = args->entindex;
+	const bool last = args->bparam1 != 0;
 	VectorCopy( args->origin, vecSrc );
 	VectorCopy( args->angles, angles );
 
@@ -1673,7 +1632,7 @@ void EV_TripmineFire( event_args_t *args )
 	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecSrc + forward * 128.0f, PM_NORMAL, -1, &tr );
 
 	//Hit something solid
-	if( tr.fraction < 1.0f )
+	if( tr.fraction < 1.0f && !last )
 		 gEngfuncs.pEventAPI->EV_WeaponAnimation ( TRIPMINE_DRAW, 0 );
 	
 	gEngfuncs.pEventAPI->EV_PopPMStates();
@@ -1701,7 +1660,7 @@ enum squeak_e
 void EV_SnarkFire( event_args_t *args )
 {
 	int idx;
-	vec3_t vecSrc, angles, view_ofs, forward;
+	vec3_t vecSrc, angles, /*view_ofs,*/ forward;
 	pmtrace_t tr;
 
 	idx = args->entindex;

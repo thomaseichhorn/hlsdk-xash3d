@@ -337,7 +337,7 @@ int CCrowbar::Swing( int fFirst )
 		SetThink( &CCrowbar::Smack );
 		pev->nextthink = gpGlobals->time + 0.2f;
 #endif
-#ifdef CROWBAR_DELAY_FIX
+#if CROWBAR_DELAY_FIX
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25f;
 #else
 		m_flNextPrimaryAttack = GetNextAttackDelay( 0.25f );
@@ -366,7 +366,7 @@ void CCrowbar::WeaponIdle( void )
 			if( flRand > 0.5f )
 			{
 				iAnim = CROWBAR_IDLE;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 70.0f / 30.0f;
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 70.0f / 25.0f;
 			}
 			else
 			{
