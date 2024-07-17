@@ -173,10 +173,13 @@ int CHudDeathNotice::MsgFunc_DeathMsg( const char *pszName, int iSize, void *pbu
 	char killedwith[32];
 	strcpy( killedwith, "d_" );
 	strncat( killedwith, READ_STRING(), sizeof(killedwith) - strlen(killedwith) - 1 );
+	killedwith[sizeof(killedwith) - 1] = '\0';
 
-#if USE_VGUI
+#if USE_VGUI && !USE_NOVGUI_SCOREBOARD
 	if (gViewPort)
 		gViewPort->DeathMsg( killer, victim );
+#else
+	gHUD.m_Scoreboard.DeathMsg( killer, victim );
 #endif
 
 	gHUD.m_Spectator.DeathMessage( victim );
@@ -206,7 +209,7 @@ int CHudDeathNotice::MsgFunc_DeathMsg( const char *pszName, int iSize, void *pbu
 	else
 	{
 		rgDeathNoticeList[i].KillerColor = GetClientColor( killer );
-		strncpy( rgDeathNoticeList[i].szKiller, killer_name, MAX_PLAYER_NAME_LENGTH );
+		strncpy( rgDeathNoticeList[i].szKiller, killer_name, MAX_PLAYER_NAME_LENGTH - 1 );
 		rgDeathNoticeList[i].szKiller[MAX_PLAYER_NAME_LENGTH - 1] = 0;
 	}
 
@@ -223,7 +226,7 @@ int CHudDeathNotice::MsgFunc_DeathMsg( const char *pszName, int iSize, void *pbu
 	else
 	{
 		rgDeathNoticeList[i].VictimColor = GetClientColor( victim );
-		strncpy( rgDeathNoticeList[i].szVictim, victim_name, MAX_PLAYER_NAME_LENGTH );
+		strncpy( rgDeathNoticeList[i].szVictim, victim_name, MAX_PLAYER_NAME_LENGTH - 1 );
 		rgDeathNoticeList[i].szVictim[MAX_PLAYER_NAME_LENGTH - 1] = 0;
 	}
 

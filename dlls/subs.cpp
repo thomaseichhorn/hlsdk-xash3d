@@ -400,13 +400,6 @@ void CBaseToggle::LinearMove( Vector vecDest, float flSpeed )
 	// divide vector length by speed to get time to reach dest
 	float flTravelTime = vecDestDelta.Length() / flSpeed;
 
-	if( flTravelTime < 0.05f )
-	{
-		UTIL_SetOrigin( pev, m_vecFinalDest );
-		LinearMoveDone();
-		return;
-	}
-
 	// set nextthink to trigger a call to LinearMoveDone when dest is reached
 	pev->nextthink = pev->ltime + flTravelTime;
 	SetThink( &CBaseToggle::LinearMoveDone );
@@ -525,6 +518,27 @@ float CBaseToggle::AxisDelta( int flags, const Vector &angle1, const Vector &ang
 		return angle1.x - angle2.x;
 
 	return angle1.y - angle2.y;
+}
+
+void CBaseToggle::PlaySentence( const char *pszSentence, float duration, float volume, float attenuation )
+{
+	if( pszSentence && IsAllowedToSpeak())
+	{
+		if( pszSentence[0] == '!' )
+			EMIT_SOUND_DYN( edict(), CHAN_VOICE, pszSentence, volume, attenuation, 0, PITCH_NORM );
+		else
+			SENTENCEG_PlayRndSz( edict(), pszSentence, volume, attenuation, 0, PITCH_NORM );
+	}
+}
+
+void CBaseToggle::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
+{
+	PlaySentence( pszSentence, duration, volume, attenuation );
+}
+
+void CBaseToggle::SentenceStop( void )
+{
+	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
 }
 
 /*
