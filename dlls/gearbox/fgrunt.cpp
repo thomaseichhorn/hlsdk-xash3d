@@ -1361,7 +1361,7 @@ int CHFGrunt :: ISoundMask ( void)
 //=========================================================
 void CHFGrunt :: CheckAmmo ( void )
 {
-	if ( m_cAmmoLoaded <= 0 )
+	if ( pev->weapons != 0 && m_cAmmoLoaded <= 0 )
 	{
 		SetConditions(bits_COND_NO_AMMO_LOADED);
 	}
@@ -1530,7 +1530,7 @@ BOOL CHFGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CHFGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 {
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire() && ( GetBodygroup( 3 ) != 3 ) )
+	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire() && GetBodygroup( FG_GUN_GROUP ) != FG_GUN_NONE )
 	{
 		TraceResult	tr;
 
@@ -1543,7 +1543,7 @@ BOOL CHFGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 		Vector vecSrc = GetGunPosition();
 
 		// verify that a bullet fired from the gun will hit the enemy before the world.
-		UTIL_TraceLine( vecSrc, m_hEnemy->BodyTarget(vecSrc), ignore_monsters, ignore_glass, ENT(pev), &tr);
+		UTIL_TraceLine( vecSrc, m_hEnemy->BodyTarget(vecSrc), ignore_monsters, ENT(pev), &tr);
 
 		if ( tr.flFraction == 1.0 )
 		{
@@ -1846,7 +1846,8 @@ void CHFGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	{
 		case HGRUNT_ALLY_AE_DROP_GUN:
 		{
-			DropMyItems(FALSE);
+			if (GetBodygroup(FG_GUN_GROUP) != FG_GUN_NONE)
+				DropMyItems(FALSE);
 			SetUse( NULL );
 		}
 		break;
@@ -1946,7 +1947,7 @@ void CHFGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				SENTENCEG_PlayRndSz(ENT(pev), SentenceByNumber(FGRUNT_SENT_ALERT), FGRUNT_SENTENCE_VOLUME, ATTN_NORM, 0, m_voicePitch);
 				JustSpoke();
 			}
-
+			break;
 		}
 
 		default:
@@ -1990,32 +1991,37 @@ void CHFGrunt :: Spawn()
 		{
 			m_iHead = RANDOM_LONG(FG_HEAD_SAW, FG_HEAD_SAW_BLACK);
 		}
+		else if (pev->weapons == 0)
+		{
+			m_iHead = FG_HEAD_MP;
+		}
 		else
 			m_iHead = FG_HEAD_MASK;
 	}
 	else if ( m_iHead >= FG_HEAD_COUNT )
 		m_iHead = FG_HEAD_MASK;
 
-	if ( pev->weapons <= 0 )
-	{
-		pev->weapons = FGRUNT_9MMAR;
-	}
-	if (FBitSet( pev->weapons, FGRUNT_SHOTGUN ))
-	{
-		SetBodygroup( FG_GUN_GROUP, FG_GUN_SHOTGUN );
-		SetBodygroup( FG_TORSO_GROUP, FG_TORSO_SHOTGUN );
-		m_cClipSize		= 8;
-	}
 	if (FBitSet( pev->weapons, FGRUNT_9MMAR ))
 	{
 		SetBodygroup( FG_GUN_GROUP, FG_GUN_MP5 );
 		m_cClipSize	= FGRUNT_CLIP_SIZE;
 	}
-	if (FBitSet( pev->weapons, FGRUNT_M249 ))
+	else if (FBitSet( pev->weapons, FGRUNT_SHOTGUN ))
+	{
+		SetBodygroup( FG_GUN_GROUP, FG_GUN_SHOTGUN );
+		SetBodygroup( FG_TORSO_GROUP, FG_TORSO_SHOTGUN );
+		m_cClipSize		= 8;
+	}
+	else if (FBitSet( pev->weapons, FGRUNT_M249 ))
 	{
 		SetBodygroup( FG_GUN_GROUP, FG_GUN_SAW );
 		SetBodygroup( FG_TORSO_GROUP, FG_TORSO_M249 );
 		m_cClipSize	= FGRUNT_CLIP_SIZE;
+	}
+	else
+	{
+		SetBodygroup( FG_GUN_GROUP, FG_GUN_NONE );
+		m_cClipSize = 0;
 	}
 
 	SetBodygroup( FG_HEAD_GROUP, m_iHead );
@@ -2371,7 +2377,7 @@ Schedule_t* CHFGrunt :: GetScheduleOfType ( int Type )
 		break;
 	case SCHED_HGRUNT_ALLY_ELOF_FAIL:
 		{
-			return GetScheduleOfType( SCHED_RANGE_ATTACK1 );
+			return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
 		}
 		break;
 	case SCHED_HGRUNT_ALLY_ESTABLISH_LINE_OF_FIRE:
@@ -3240,7 +3246,7 @@ void CTorch::HandleAnimEvent(MonsterEvent_t *pEvent)
 		KillGas ();
 		break;
 	case HGRUNT_ALLY_AE_DROP_GUN:
-		if ( FBitSet( pev->weapons, TORCH_EAGLE ) )
+		if ( FBitSet( pev->weapons, TORCH_EAGLE ) && pev->body != TORCH_GUN_NONE )
 		{
 			DropMyItems(FALSE);
 		}
@@ -3556,11 +3562,16 @@ bool CMedic::Heal( void )
 	if ( !HasHealCharge() || !HasHealTarget() )
 		return false;
 
-	Vector target = m_hTargetEnt->pev->origin - pev->origin;
+	CBaseEntity* pTargetEnt = m_hTargetEnt;
+	Vector target = pTargetEnt->pev->origin - pev->origin;
 	if ( target.Length() > 100 )
 		return false;
 
-	m_flHealCharge -= m_hTargetEnt->TakeHealth( Q_min(10, m_flHealCharge), DMG_GENERIC );
+	const float maxHeal = Q_min(10, m_flHealCharge);
+	const float diff = pTargetEnt->pev->max_health - pTargetEnt->pev->health;
+	const int healAmount = static_cast<int>(Q_min(maxHeal, diff)); // cast to avoid player having non-integer hp
+	pTargetEnt->TakeHealth( healAmount, DMG_GENERIC );
+	m_flHealCharge -= healAmount;
 	ALERT(at_aiconsole, "Medic grunt heal charge left: %f\n", m_flHealCharge);
 	m_fHealing = TRUE;
 	return true;
@@ -3766,7 +3777,7 @@ void CMedic::HandleAnimEvent(MonsterEvent_t *pEvent)
 		break;
 
 	case HGRUNT_ALLY_AE_DROP_GUN:
-		if ( FBitSet( pev->weapons, MEDIC_EAGLE | MEDIC_HANDGUN ) )
+		if ( FBitSet( pev->weapons, MEDIC_EAGLE | MEDIC_HANDGUN ) && GetBodygroup(MEDIC_GUN_GROUP) != MEDIC_GUN_NONE )
 		{
 			DropMyItems(FALSE);
 		}

@@ -17,7 +17,7 @@
 #define PLAYER_H
 
 #include "pm_materials.h"
-#include "ropes.h"
+class CRope;
 
 #define PLAYER_FATAL_FALL_SPEED		1024// approx 60 feet
 #define PLAYER_MAX_SAFE_FALL_SPEED	580// approx 20 feet
@@ -199,7 +199,7 @@ public:
 	Vector				m_vecAutoAim;
 	BOOL				m_fOnTarget;
 	int					m_iDeaths;
-	float				m_iRespawnFrames;	// used in PlayerDeathThink() to make sure players can always respawn
+	float				m_flRespawnTimer;	// used in PlayerDeathThink() to make sure players can always respawn
 
 	int m_lastx, m_lasty;  // These are the previous update's crosshair angles, DON"T SAVE/RESTORE
 
@@ -276,6 +276,7 @@ public:
 	void DropPlayerItem ( char *pszItemName );
 	BOOL HasPlayerItem( CBasePlayerItem *pCheckItem );
 	BOOL HasNamedPlayerItem( const char *pszItemName );
+	BOOL HasPlayerItemFromID( int nID );
 	BOOL HasWeapons( void );// do I have ANY weapons?
 	void SelectPrevItem( int iItem );
 	void SelectNextItem( int iItem );
@@ -379,8 +380,6 @@ public:
 	int m_iAutoWepSwitch;
 
 	Vector m_vecLastViewAngles;
-
-	bool m_bSentBhopcap; // If false, the player just joined and needs a bhopcap message.
 
 	bool m_bIsClimbing;
 	float m_flLastClimbTime;

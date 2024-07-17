@@ -1010,16 +1010,19 @@ void CVoltigore::StartTask(Task_t *pTask)
 		}
 		break;
 	case TASK_VOLTIGORE_GET_PATH_TO_ENEMY_CORPSE:
-		UTIL_MakeVectors( pev->angles );
-		if( BuildRoute( m_vecEnemyLKP - gpGlobals->v_forward * 50, bits_MF_TO_LOCATION, NULL ) )
 		{
-			TaskComplete();
+			UTIL_MakeVectors( pev->angles );
+			if( BuildRoute( m_vecEnemyLKP - gpGlobals->v_forward * 50, bits_MF_TO_LOCATION, NULL ) )
+			{
+				TaskComplete();
+			}
+			else
+			{
+				ALERT( at_aiconsole, "VoltigoreGetPathToEnemyCorpse failed!!\n" );
+				TaskFail();
+			}
 		}
-		else
-		{
-			ALERT( at_aiconsole, "VoltigoreGetPathToEnemyCorpse failed!!\n" );
-			TaskFail();
-		}
+		break;
 	default:
 		CBaseMonster::StartTask(pTask);
 		break;
@@ -1226,6 +1229,8 @@ public:
 	Schedule_t* GetSchedule();
 	Schedule_t* GetScheduleOfType(int Type);
 
+	CBaseEntity *CheckTraceHullAttack( float flDist, int iDamage, int iDmgType );
+
 	virtual int SizeForGrapple() { return GRAPPLE_SMALL; }
 };
 
@@ -1274,7 +1279,7 @@ void CBabyVoltigore::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case VOLTIGORE_AE_PUNCH_SINGLE:
 	{
-		CBaseEntity *pHurt = CheckTraceHullAttack(70, gSkillData.babyVoltigoreDmgPunch, DMG_CLUB | DMG_ALWAYSGIB);
+		CBaseEntity *pHurt = CheckTraceHullAttack(64, gSkillData.babyVoltigoreDmgPunch, DMG_CLUB );
 		if (pHurt)
 		{
 			if (FBitSet(pHurt->pev->flags, FL_MONSTER|FL_CLIENT))
@@ -1300,7 +1305,7 @@ void CBabyVoltigore::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case VOLTIGORE_AE_PUNCH_BOTH:
 	{
-		CBaseEntity *pHurt = CheckTraceHullAttack(70, gSkillData.babyVoltigoreDmgPunch, DMG_CLUB | DMG_ALWAYSGIB);
+		CBaseEntity *pHurt = CheckTraceHullAttack(64, gSkillData.babyVoltigoreDmgPunch, DMG_CLUB );
 		if (pHurt)
 		{
 			if (FBitSet(pHurt->pev->flags, FL_MONSTER|FL_CLIENT))
@@ -1404,6 +1409,8 @@ Schedule_t *CBabyVoltigore::GetSchedule(void)
 
 		break;
 	}
+	default:
+		break;
 	}
 
 	return CBaseMonster::GetSchedule();
@@ -1421,4 +1428,31 @@ Schedule_t *CBabyVoltigore::GetScheduleOfType(int Type)
 		return CVoltigore::GetScheduleOfType(Type);
 		break;
 	}
+}
+
+CBaseEntity *CBabyVoltigore::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType )
+{
+	TraceResult tr;
+
+	UTIL_MakeAimVectors( pev->angles );
+
+	Vector vecStart = pev->origin;
+	vecStart.z += pev->size.z;
+	Vector vecEnd = vecStart + ( gpGlobals->v_forward * flDist );
+
+	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT( pev ), &tr );
+
+	if( tr.pHit )
+	{
+		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
+
+		if( iDamage > 0 )
+		{
+			pEntity->TakeDamage( pev, pev, iDamage, iDmgType );
+		}
+
+		return pEntity;
+	}
+
+	return NULL;
 }

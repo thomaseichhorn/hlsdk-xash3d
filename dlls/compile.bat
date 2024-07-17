@@ -149,10 +149,12 @@ set SOURCES=gearbox/blkop_apache.cpp ^
 	tripmine.cpp ^
 	turret.cpp ^
 	util.cpp ^
+	vehicle.cpp ^
 	weapons.cpp ^
 	world.cpp ^
 	xen.cpp ^
 	zombie.cpp ^
+	../game_shared/vcs_info.cpp ^
 	../pm_shared/pm_debug.c ../pm_shared/pm_math.c ../pm_shared/pm_shared.c
 set DEFINES=/DCLIENT_WEAPONS /Dsnprintf=_snprintf /DNO_VOICEGAMEMGR /DNDEBUG
 set LIBS=user32.lib
