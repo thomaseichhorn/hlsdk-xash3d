@@ -87,6 +87,11 @@ void CHud::Think( void )
 		// only let players adjust up in fov,  and only if they are not overriden by something else
 		m_iFOV = Q_max( default_fov->value, 90 );  
 	}
+
+	if( gEngfuncs.IsSpectateOnly() )
+	{
+		m_iFOV = gHUD.m_Spectator.GetFOV(); // default_fov->value;
+	}
 }
 
 // Redraw
@@ -148,6 +153,8 @@ int CHud::Redraw( float flTime, int intermission )
 	// if no redrawing is necessary
 	// return 0;
 
+	m_iHudNumbersYOffset = IsHL25() ? m_iFontHeight * 0.2 : 0;
+
 	if( m_pCvarDraw->value )
 	{
 		HUDLIST *pList = m_pHudList;
@@ -201,9 +208,7 @@ int CHud::Redraw( float flTime, int intermission )
 
 		if( m_hsprCursor == 0 )
 		{
-			char sz[256];
-			sprintf( sz, "sprites/cursor.spr" );
-			m_hsprCursor = SPR_Load( sz );
+			m_hsprCursor = SPR_Load( "sprites/cursor.spr" );
 		}
 
 		SPR_Set( m_hsprCursor, 250, 250, 250 );
