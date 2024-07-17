@@ -20,7 +20,7 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.9)
 project (CLDLL)
 
 set (CLDLL_LIBRARY client)
@@ -29,12 +29,20 @@ add_definitions(-DCLIENT_DLL)
 
 if(NOT MSVC)
 	add_compile_options(-fno-exceptions) # GCC/Clang flag
-	add_compile_options(-Wno-write-strings) # GCC/Clang flag
+	add_compile_options(-fno-rtti) # GCC/Clang flag
 	add_compile_options(-fvisibility=hidden) # GCC/Clang flag
 	add_definitions(-D_LINUX -DLINUX) # It seems enough for all non-Win32 systems
 	add_definitions(-Dstricmp=strcasecmp -Dstrnicmp=strncasecmp)
 	if(NOT MINGW)
 		add_definitions(-D_snprintf=snprintf -D_vsnprintf=vsnprintf)
+	endif()
+	if(CMAKE_BUILD_TYPE MATCHES "Release"
+		OR (CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo"
+		AND CMAKE_SYSTEM_NAME STREQUAL "Android"))
+		add_compile_options(-fno-unwind-tables -fno-asynchronous-unwind-tables) # GCC/Clang flag
+		add_compile_options(-fomit-frame-pointer) # GCC/Clang flag
+		add_compile_options(-ftree-vectorize) # GCC/Clang flag
+		add_compile_options(-funsafe-math-optimizations) # GCC/Clang flag
 	endif()
 else()
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
@@ -90,9 +98,9 @@ set (CLDLL_SOURCES
 	input_goldsource.cpp
 	input_mouse.cpp
 	input_xash3d.cpp
+	interpolation.cpp
 	menu.cpp
 	message.cpp
-	overview.cpp
 	parsemsg.cpp
 	../pm_shared/pm_debug.c
 	../pm_shared/pm_math.c
@@ -106,12 +114,14 @@ set (CLDLL_SOURCES
 	train.cpp
 	tri.cpp
 	util.cpp
-	view.cpp)
+	view.cpp
+	../game_shared/vcs_info.cpp
+)
 
 if (USE_VGUI)
 	list(APPEND CLDLL_SOURCES
 		vgui_int.cpp
-		vgui_ClassMenu.cpp
+#		vgui_ClassMenu.cpp
 		vgui_ConsolePanel.cpp
 		vgui_ControlConfigPanel.cpp
 		vgui_CustomObjects.cpp
@@ -120,7 +130,7 @@ if (USE_VGUI)
 		vgui_ScorePanel.cpp
 		vgui_TeamFortressViewport.cpp
 		vgui_SpectatorPanel.cpp
-		vgui_teammenu.cpp
+#		vgui_teammenu.cpp
 		voice_status.cpp
 		../game_shared/vgui_checkbutton2.cpp
 		../game_shared/vgui_grid.cpp
@@ -144,6 +154,10 @@ else()
 endif()
 
 include_directories (. hl/ ../dlls ../dlls/wpn_shared ../common ../engine ../pm_shared ../game_shared ../public dmc ../dlls/dmc ../dlls/dmc .. ../dlls/aghl ../dlls/3wave)
+
+if (WIN32)
+	include_directories (../external/)
+endif()
 
 if (USE_VGUI)
 	SET(CMAKE_SKIP_RPATH TRUE)
@@ -200,8 +214,16 @@ if(MSVC)
 	set_property(TARGET ${CLDLL_LIBRARY} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+if(HAVE_LTO)
+	set_property(TARGET ${CLDLL_LIBRARY} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 install( TARGETS ${CLDLL_LIBRARY}
 	DESTINATION "${GAMEDIR}/${CLIENT_INSTALL_DIR}/"
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
 	    GROUP_READ GROUP_EXECUTE
 		WORLD_READ WORLD_EXECUTE )
+
+add_custom_command(TARGET ${CLDLL_LIBRARY}
+			POST_BUILD DEPENDS ${CLDLL_LIBRARY}
+			COMMAND $<$<CONFIG:release>:${CMAKE_STRIP}> -s $<TARGET_FILE:${CLDLL_LIBRARY}>)

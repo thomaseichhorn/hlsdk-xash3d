@@ -27,7 +27,7 @@ extern cvar_t timelimit;
 extern cvar_t friendlyfire;
 extern cvar_t falldamage;
 extern cvar_t weaponstay;
-extern cvar_t explosionfix;
+extern cvar_t pushablemode;
 extern cvar_t forcerespawn;
 extern cvar_t flashlight;
 extern cvar_t aimcrosshair;
@@ -39,6 +39,9 @@ extern cvar_t allowmonsters;
 extern cvar_t allowhook;
 extern cvar_t instagib;
 extern cvar_t arcade;
+extern cvar_t bhopcap;
+extern cvar_t sv_pushable_fixed_tick_fudge;
+// extern cvar_t sv_busters;
 
 // Engine Cvars
 extern cvar_t *g_psv_gravity;

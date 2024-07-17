@@ -58,6 +58,11 @@ void CHud::Think( void )
 		// only let players adjust up in fov,  and only if they are not overriden by something else
 		m_iFOV = Q_max( default_fov->value, 90 );  
 	}
+
+	if( gEngfuncs.IsSpectateOnly() )
+	{
+		m_iFOV = gHUD.m_Spectator.GetFOV(); // default_fov->value;
+	}
 }
 
 // Redraw
@@ -176,12 +181,12 @@ void ScaleColors( int &r, int &g, int &b, int a )
 
 /*
 ===========================
-int ReturnStringPixelLength ( char *Hihi )
+int ReturnStringPixelLength ( const char *Hihi )
 
 Returns a integer representing the length of the string passed
 ===========================
 */
-int CHud::ReturnStringPixelLength( char *Hihi )
+int CHud::ReturnStringPixelLength( const char *Hihi )
 {
 	int iNameLength = 0;
 

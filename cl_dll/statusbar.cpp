@@ -78,11 +78,12 @@ void CHudStatusBar::ParseStatusString( int line_num )
 	GetPlayerInfo( indexval, &g_PlayerInfoList[indexval] );
 	if( g_PlayerInfoList[indexval].name != NULL )
         {
-		strncpy( m_szName[line_num], g_PlayerInfoList[indexval].name, MAX_PLAYER_NAME_LENGTH );
+		strncpy( m_szName[line_num], g_PlayerInfoList[indexval].name, MAX_PLAYER_NAME_LENGTH - 1 );
+		m_szName[line_num][MAX_PLAYER_NAME_LENGTH - 1] = '\0';
 	}
 	else
 	{
-		strncpy( m_szName[line_num], "******", MAX_PLAYER_NAME_LENGTH );
+		strcpy( m_szName[line_num], "******" );
 	}
 	g_iNameColors = GetTeamIndex( indexval );
 
@@ -226,7 +227,7 @@ int CHudStatusBar::MsgFunc_StatusText( const char *pszName, int iSize, void *pbu
 	if( line < 0 || line >= MAX_STATUSBAR_LINES )
 		return 1;
 
-	strncpy( m_szStatusText[line], READ_STRING(), MAX_STATUSTEXT_LENGTH );
+	strncpy( m_szStatusText[line], READ_STRING(), MAX_STATUSTEXT_LENGTH - 1 );
 	m_szStatusText[line][MAX_STATUSTEXT_LENGTH - 1] = 0;  // ensure it's null terminated ( strncpy() won't null terminate if read string too long)
 
 	if( m_szStatusText[0] == 0 )

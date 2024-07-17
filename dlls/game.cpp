@@ -16,6 +16,10 @@
 #include "eiface.h"
 #include "util.h"
 #include "game.h"
+#include "vcs_info.h"
+
+static cvar_t build_commit = { "sv_game_build_commit", g_VCSInfo_Commit };
+static cvar_t build_branch = { "sv_game_build_branch", g_VCSInfo_Commit };
 
 //++ BulliT
 #include "agglobal.h"
@@ -25,8 +29,6 @@ extern bool g_bIsThreeWave;
 
 // QUAKECLASSIC
 cvar_t rj		= { "rj", "0" };
-BOOL		g_fIsXash3D;
-
 cvar_t displaysoundlist = {"displaysoundlist","0"};
 
 // multiplayer server rules
@@ -41,6 +43,9 @@ cvar_t friendlyfire	= { "mp_friendlyfire","0", FCVAR_SERVER };
 cvar_t falldamage	= { "mp_falldamage","0", FCVAR_SERVER };
 cvar_t weaponstay	= { "mp_weaponstay","1", FCVAR_SERVER };
 cvar_t explosionfix	= { "explosionfix", "0", FCVAR_SERVER };
+cvar_t monsteryawspeedfix	= { "monsteryawspeedfix", "1", FCVAR_SERVER };
+cvar_t corpsephysics = { "corpsephysics", "0", FCVAR_SERVER };
+cvar_t pushablemode = { "pushablemode", "0", FCVAR_SERVER };
 cvar_t forcerespawn	= { "mp_forcerespawn","1", FCVAR_SERVER };
 cvar_t flashlight	= { "mp_flashlight","0", FCVAR_SERVER };
 cvar_t aimcrosshair	= { "mp_autocrosshair","1", FCVAR_SERVER };
@@ -462,14 +467,13 @@ cvar_t	sk_player_leg3	= { "sk_player_leg3","1" };
 
 // END Cvars for Skill Level settings
 
+cvar_t sv_pushable_fixed_tick_fudge = { "sv_pushable_fixed_tick_fudge", "15" };
+// cvar_t sv_busters = { "sv_busters", "0" };
+
 // Register your console variables here
 // This gets called one time when the game is initialied
 void GameDLLInit( void )
 {
-	// Register cvars here:
-	if( CVAR_GET_POINTER( "build" ) )
-		g_fIsXash3D = TRUE;
-
 	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
 	g_psv_aim = CVAR_GET_POINTER( "sv_aim" );
 	g_footsteps = CVAR_GET_POINTER( "mp_footsteps" );
@@ -484,6 +488,9 @@ void GameDLLInit( void )
 	// QUAKECLASSIC
 	CVAR_REGISTER( &rj );
 
+	CVAR_REGISTER( &build_commit );
+	CVAR_REGISTER( &build_branch );
+
 	CVAR_REGISTER( &displaysoundlist );
 	CVAR_REGISTER( &allow_spectators );
 
@@ -497,7 +504,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER( &friendlyfire );
 	CVAR_REGISTER( &falldamage );
 	CVAR_REGISTER( &weaponstay );
-	CVAR_REGISTER( &explosionfix );
+	CVAR_REGISTER( &pushablemode );
 	CVAR_REGISTER( &forcerespawn );
 	CVAR_REGISTER( &flashlight );
 	CVAR_REGISTER( &aimcrosshair );
@@ -513,7 +520,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER( &multibyte_only );
 
 	CVAR_REGISTER( &mp_chattime );
-
+	// CVAR_REGISTER( &sv_busters );
 
 
 // REGISTER CVARS FOR SKILL LEVEL STUFF
@@ -890,6 +897,8 @@ void GameDLLInit( void )
 	CVAR_REGISTER( &sk_player_leg2 );
 	CVAR_REGISTER( &sk_player_leg3 );
 // END REGISTER CVARS FOR SKILL LEVEL STUFF
+
+	CVAR_REGISTER( &sv_pushable_fixed_tick_fudge );
 
 	SERVER_COMMAND( "exec skill.cfg\n" );
 
