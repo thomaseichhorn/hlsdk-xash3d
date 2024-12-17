@@ -218,7 +218,9 @@ void UTIL_StringToVector( float * pVector, const char *pString )
 	char *pstr, *pfront, tempString[128];
 	int	j;
 
-	strcpy( tempString, pString );
+	strncpy( tempString, pString, sizeof( tempString ) );
+	tempString[sizeof( tempString ) - 1] = '\0';
+
 	pstr = pfront = tempString;
 
 	for( j = 0; j < 3; j++ )		
@@ -309,7 +311,7 @@ int UTIL_FindEntityInMap( const char *name, float *origin, float *angle )
 	
 			if( token[0] == '}' )
 			{
-				gEngfuncs.Con_DPrintf( "UTIL_FindEntityInMap: closing brace without data" );
+				gEngfuncs.Con_DPrintf( "UTIL_FindEntityInMap: closing brace without data\n" );
 				return 0;
 			}
 
@@ -655,10 +657,10 @@ int CHudSpectator::Draw( float flTime )
 		// check if name would be in inset window
 		if( m_pip->value != INSET_OFF )
 		{
-			if( m_vPlayerPos[i][0] > XRES( m_OverviewData.insetWindowX ) &&
-					m_vPlayerPos[i][1] > YRES( m_OverviewData.insetWindowY ) &&
-					m_vPlayerPos[i][0] < XRES( m_OverviewData.insetWindowX + m_OverviewData.insetWindowWidth ) &&
-					m_vPlayerPos[i][1] < YRES( m_OverviewData.insetWindowY + m_OverviewData.insetWindowHeight) ) 
+			if( m_vPlayerPos[i][0] > XRES_HD( m_OverviewData.insetWindowX ) &&
+					m_vPlayerPos[i][1] > YRES_HD( m_OverviewData.insetWindowY ) &&
+					m_vPlayerPos[i][0] < XRES_HD( m_OverviewData.insetWindowX + m_OverviewData.insetWindowWidth ) &&
+					m_vPlayerPos[i][1] < YRES_HD( m_OverviewData.insetWindowY + m_OverviewData.insetWindowHeight) ) 
 				continue;
 		}
 
@@ -725,9 +727,9 @@ void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 			v1[1] = READ_COORD();
 			v1[2] = READ_COORD();	// vJumpOrigin
 
-			v1[0] = READ_COORD();	// view angle
-			v1[1] = READ_COORD();	// vJumpAngles
-			v1[2] = READ_COORD();
+			v2[0] = READ_COORD();	// view angle
+			v2[1] = READ_COORD();	// vJumpAngles
+			v2[2] = READ_COORD();
 
 			f1    = READ_BYTE();	// fov
 			i1    = READ_WORD();	// target

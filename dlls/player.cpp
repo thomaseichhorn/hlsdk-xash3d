@@ -120,6 +120,7 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD( CBasePlayer, m_iFOV, FIELD_INTEGER ),
 
 	DEFINE_FIELD(CBasePlayer, m_fInXen, FIELD_BOOLEAN),
+	DEFINE_FIELD(CBasePlayer, m_DisplacerReturn, FIELD_VECTOR),
 	DEFINE_FIELD(CBasePlayer, m_pRope, FIELD_CLASSPTR),
 
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
@@ -2952,13 +2953,24 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 	CBaseEntity *pSpot;
 	edict_t *player;
 
+	int nNumRandomSpawnsToTry = 10;
+
 	player = pPlayer->edict();
 
 	if( !strnicmp( STRING( gpGlobals->mapname ), "op4ctf", 6 ) )
 	{
+		if( !g_pLastSpawn )
+		{
+			nNumRandomSpawnsToTry = 0;
+			CBaseEntity* pEnt = 0;
+
+			while( ( pEnt = UTIL_FindEntityByClassname( pEnt, "info_ctfspawn" )))
+				nNumRandomSpawnsToTry++;
+		}
+
 		pSpot = g_pLastSpawn;
 		// Randomize the start spot
-		for( int i = RANDOM_LONG( 1, 9 ); i > 0; i-- )
+		for( int i = RANDOM_LONG( 1, nNumRandomSpawnsToTry - 1 ); i > 0; i-- )
 			pSpot = UTIL_FindEntityByClassname( pSpot, "info_ctfspawn" );
 		if( FNullEnt( pSpot ) )  // skip over the null point
 			pSpot = UTIL_FindEntityByClassname( pSpot, "info_ctfspawn" );
@@ -3013,9 +3025,18 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 		}
 		else if( g_pGameRules->IsDeathmatch() )
 		{
+			if( !g_pLastSpawn )
+			{
+				nNumRandomSpawnsToTry = 0;
+				CBaseEntity* pEnt = 0;
+
+				while( ( pEnt = UTIL_FindEntityByClassname( pEnt, "info_player_deathmatch" )))
+					nNumRandomSpawnsToTry++;
+			}
+
 			pSpot = g_pLastSpawn;
 			// Randomize the start spot
-			for( int i = RANDOM_LONG( 1, 9 ); i > 0; i-- )
+			for( int i = RANDOM_LONG( 1, nNumRandomSpawnsToTry - 1 ); i > 0; i-- )
 				pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
 			if( FNullEnt( pSpot ) )  // skip over the null point
 				pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
@@ -3074,7 +3095,7 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 ReturnSpot:
 	if( FNullEnt( pSpot ) )
 	{
-		ALERT( at_error, "PutClientInServer: no info_player_start on level" );
+		ALERT( at_error, "PutClientInServer: no info_player_start on level\n" );
 		return INDEXENT( 0 );
 	}
 
@@ -4585,7 +4606,7 @@ Vector CBasePlayer::GetAutoaimVector( float flDelta )
 	// m_vecAutoAim = m_vecAutoAim * 0.99;
 
 	// Don't send across network if sv_aim is 0
-	if( g_psv_aim->value != 0 )
+	if( g_psv_aim->value && g_psv_allow_autoaim && g_psv_allow_autoaim->value )
 	{
 		if( m_vecAutoAim.x != m_lastx || m_vecAutoAim.y != m_lasty )
 		{
@@ -4611,7 +4632,7 @@ Vector CBasePlayer::AutoaimDeflection( Vector &vecSrc, float flDist, float flDel
 	edict_t *bestent;
 	TraceResult tr;
 
-	if( g_psv_aim->value == 0 )
+	if( !( g_psv_aim->value && g_psv_allow_autoaim && g_psv_allow_autoaim->value ))
 	{
 		m_fOnTarget = FALSE;
 		return g_vecZero;

@@ -71,6 +71,8 @@ inline struct cvar_s *CVAR_CREATE( const char *cv, const char *val, const int fl
 // Use this to set any co-ords in 640x480 space
 #define XRES(x)		( (int)( float(x) * ( (float)ScreenWidth / 640.0f ) + 0.5f ) )
 #define YRES(y)		( (int)( float(y) * ( (float)ScreenHeight / 480.0f ) + 0.5f ) )
+#define XRES_HD(x)      ( (int)( float(x) * Q_max(1.f, (float)ScreenWidth / 1280.f )))
+#define YRES_HD(y)	( (int)( float(y) * Q_max(1.f, (float)ScreenHeight / 720.f )))
 
 // use this to project world coordinates to screen coordinates
 #define XPROJECT(x)	( ( 1.0f + (x) ) * ScreenWidth * 0.5f )
@@ -152,6 +154,27 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 #define Q_max(a, b)  (((a) > (b)) ? (a) : (b))
 #define Q_min(a, b)  (((a) < (b)) ? (a) : (b))
 #define fabs(x)	   ((x) > 0 ? (x) : 0 - (x))
+
+inline int GetSpriteRes( int width, int height )
+{
+	int i;
+
+	if( width < 640 )
+		i = 320;
+	else if( width < 1280 || !gHUD.m_pAllowHD->value )
+		i = 640;
+	else
+	{
+		if( height <= 720 )
+			i = 640;
+		else if( width <= 2560 || height <= 1600 )
+			i = 1280;
+		else
+			i = 2560;
+	}
+
+	return Q_min( i, gHUD.m_iMaxRes );
+}
 
 void ScaleColors( int &r, int &g, int &b, int a );
 
