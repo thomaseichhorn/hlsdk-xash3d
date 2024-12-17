@@ -2023,8 +2023,6 @@ void CBaseMonster::MonsterInit( void )
 	SetThink( &CBaseMonster::MonsterInitThink );
 	pev->nextthink = gpGlobals->time + 0.1f;
 	SetUse( &CBaseMonster::MonsterUse );
-
-	m_flLastYawTime = gpGlobals->time;
 }
 
 //=========================================================
@@ -2087,7 +2085,7 @@ void CBaseMonster::StartMonster( void )
 
 		if( !m_pGoalEnt )
 		{
-			ALERT( at_error, "ReadyMonster()--%s couldn't find target %s", STRING( pev->classname ), STRING( pev->target ) );
+			ALERT( at_error, "ReadyMonster()--%s couldn't find target %s\n", STRING( pev->classname ), STRING( pev->target ) );
 		}
 		else
 		{
@@ -2099,7 +2097,7 @@ void CBaseMonster::StartMonster( void )
 			// At this point, we expect only a path_corner as initial goal
 			if( !FClassnameIs( m_pGoalEnt->pev, "path_corner" ) )
 			{
-				ALERT( at_warning, "ReadyMonster--monster's initial goal '%s' is not a path_corner", STRING( pev->target ) );
+				ALERT( at_warning, "ReadyMonster--monster's initial goal '%s' is not a path_corner\n", STRING( pev->target ) );
 			}
 #endif
 			// set the monster up to walk a path corner path. 
@@ -2509,9 +2507,12 @@ float CBaseMonster::ChangeYaw( int yawSpeed )
 	{
 		if( monsteryawspeedfix.value )
 		{
-			float delta;
+			if( m_flLastYawTime == 0.f )
+				m_flLastYawTime = gpGlobals->time - gpGlobals->frametime;
 
-			delta = Q_min( gpGlobals->time - m_flLastYawTime, 0.25f );
+			float delta = Q_min( gpGlobals->time - m_flLastYawTime, 0.25f );
+
+			m_flLastYawTime = gpGlobals->time;
 
 			speed = (float)yawSpeed * delta * 2;
 		}
@@ -2560,8 +2561,6 @@ float CBaseMonster::ChangeYaw( int yawSpeed )
 	}
 	else
 		move = 0;
-
-	m_flLastYawTime = gpGlobals->time;
 
 	return move;
 }
